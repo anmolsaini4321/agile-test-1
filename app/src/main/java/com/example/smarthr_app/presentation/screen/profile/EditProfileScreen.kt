@@ -54,6 +54,7 @@ import com.example.smarthr_app.data.model.Department
 import com.example.smarthr_app.data.model.Gender
 import com.example.smarthr_app.data.model.Position
 import com.example.smarthr_app.data.model.UpdateProfileRequest
+import com.example.smarthr_app.data.model.ExtraProfileDetails
 import com.example.smarthr_app.presentation.theme.PrimaryPurple
 import com.example.smarthr_app.presentation.viewmodel.AuthViewModel
 import com.example.smarthr_app.utils.Resource
@@ -68,6 +69,7 @@ fun EditProfileScreen(
 ) {
     val context = LocalContext.current
     val user by authViewModel.user.collectAsState(initial = null)
+    val extraDetails by authViewModel.extraProfileDetails.collectAsState(initial = null)
     val updateProfileState by authViewModel.updateProfileState.collectAsState(initial = null)
 
     var name by remember { mutableStateOf("") }
@@ -75,6 +77,32 @@ fun EditProfileScreen(
     var selectedGender by remember { mutableStateOf<Gender?>(null) }
     var selectedPosition by remember { mutableStateOf<Position?>(null) }
     var selectedDepartment by remember { mutableStateOf<Department?>(null) }
+
+    // Mock/Extra details state variables
+    var aadhar by remember { mutableStateOf("") }
+    var maritalStatus by remember { mutableStateOf("") }
+    var bloodGroup by remember { mutableStateOf("") }
+    var physicallyChallenged by remember { mutableStateOf("") }
+    var currentAddress by remember { mutableStateOf("") }
+    var permanentAddress by remember { mutableStateOf("") }
+    var fathersName by remember { mutableStateOf("") }
+    var mothersName by remember { mutableStateOf("") }
+    var emergencyName by remember { mutableStateOf("") }
+    var emergencyNumber by remember { mutableStateOf("") }
+    var emergencyRelation by remember { mutableStateOf("") }
+    var bankName by remember { mutableStateOf("") }
+    var accountHolder by remember { mutableStateOf("") }
+    var accountNumber by remember { mutableStateOf("") }
+    var ifscCode by remember { mutableStateOf("") }
+    var upiId by remember { mutableStateOf("") }
+    var uan by remember { mutableStateOf("") }
+    var pan by remember { mutableStateOf("") }
+    var pfNumber by remember { mutableStateOf("") }
+    var pfJoining by remember { mutableStateOf("") }
+    var esiNumber by remember { mutableStateOf("") }
+    var esiJoining by remember { mutableStateOf("") }
+    var epsNumber by remember { mutableStateOf("") }
+    var epsExit by remember { mutableStateOf("") }
 
     var expandedGender by remember { mutableStateOf(false) }
     var expandedPosition by remember { mutableStateOf(false) }
@@ -97,6 +125,36 @@ fun EditProfileScreen(
             selectedDepartment = try {
                 it.department?.let { dept -> Department.valueOf(dept) }
             } catch (e: Exception) { null }
+        }
+    }
+
+    // Initialize fields with current extra details
+    LaunchedEffect(extraDetails) {
+        extraDetails?.let {
+            aadhar = it.aadhar ?: ""
+            maritalStatus = it.maritalStatus ?: ""
+            bloodGroup = it.bloodGroup ?: ""
+            physicallyChallenged = it.physicallyChallenged ?: ""
+            currentAddress = it.currentAddress ?: ""
+            permanentAddress = it.permanentAddress ?: ""
+            fathersName = it.fathersName ?: ""
+            mothersName = it.mothersName ?: ""
+            emergencyName = it.emergencyName ?: ""
+            emergencyNumber = it.emergencyNumber ?: ""
+            emergencyRelation = it.emergencyRelation ?: ""
+            bankName = it.bankName ?: ""
+            accountHolder = it.accountHolder ?: ""
+            accountNumber = it.accountNumber ?: ""
+            ifscCode = it.ifscCode ?: ""
+            upiId = it.upiId ?: ""
+            uan = it.uan ?: ""
+            pan = it.pan ?: ""
+            pfNumber = it.pfNumber ?: ""
+            pfJoining = it.pfJoining ?: ""
+            esiNumber = it.esiNumber ?: ""
+            esiJoining = it.esiJoining ?: ""
+            epsNumber = it.epsNumber ?: ""
+            epsExit = it.epsExit ?: ""
         }
     }
 
@@ -144,6 +202,35 @@ fun EditProfileScreen(
             department = selectedDepartment?.name
         )
 
+        // Save local extra details
+        val extraRequest = com.example.smarthr_app.data.model.ExtraProfileDetails(
+            aadhar = aadhar.trim(),
+            maritalStatus = maritalStatus.trim(),
+            bloodGroup = bloodGroup.trim(),
+            physicallyChallenged = physicallyChallenged.trim(),
+            currentAddress = currentAddress.trim(),
+            permanentAddress = permanentAddress.trim(),
+            fathersName = fathersName.trim(),
+            mothersName = mothersName.trim(),
+            emergencyName = emergencyName.trim(),
+            emergencyNumber = emergencyNumber.trim(),
+            emergencyRelation = emergencyRelation.trim(),
+            bankName = bankName.trim(),
+            accountHolder = accountHolder.trim(),
+            accountNumber = accountNumber.trim(),
+            ifscCode = ifscCode.trim(),
+            upiId = upiId.trim(),
+            uan = uan.trim(),
+            pan = pan.trim(),
+            pfNumber = pfNumber.trim(),
+            pfJoining = pfJoining.trim(),
+            esiNumber = esiNumber.trim(),
+            esiJoining = esiJoining.trim(),
+            epsNumber = epsNumber.trim(),
+            epsExit = epsExit.trim()
+        )
+
+        authViewModel.saveExtraProfileDetails(extraRequest)
         authViewModel.updateProfile(updateRequest)
     }
 
@@ -217,14 +304,15 @@ fun EditProfileScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Basic Information Card
+            // 1. Basic Information Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp)
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
                         text = "Basic Information",
@@ -232,8 +320,6 @@ fun EditProfileScreen(
                         fontWeight = FontWeight.Bold,
                         color = PrimaryPurple
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Name Field
                     OutlinedTextField(
@@ -253,8 +339,6 @@ fun EditProfileScreen(
                             focusedLeadingIconColor = PrimaryPurple
                         )
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Phone Field
                     OutlinedTextField(
@@ -282,8 +366,6 @@ fun EditProfileScreen(
                             focusedLeadingIconColor = PrimaryPurple
                         )
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Gender Dropdown
                     ExposedDropdownMenuBox(
@@ -340,17 +422,30 @@ fun EditProfileScreen(
                             )
                         }
                     }
+
+                    // Aadhar Field
+                    OutlinedTextField(
+                        value = aadhar,
+                        onValueChange = { aadhar = it },
+                        label = { Text("Aadhar Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = PrimaryPurple,
+                            focusedLabelColor = PrimaryPurple
+                        )
+                    )
                 }
             }
 
-            // Professional Information Card
+            // 2. Professional Information Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp)
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
                         text = "Professional Information",
@@ -358,8 +453,6 @@ fun EditProfileScreen(
                         fontWeight = FontWeight.Bold,
                         color = PrimaryPurple
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Position Dropdown
                     ExposedDropdownMenuBox(
@@ -386,9 +479,9 @@ fun EditProfileScreen(
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = PrimaryPurple,
-                                focusedLabelColor = PrimaryPurple,
-                                focusedLeadingIconColor = PrimaryPurple
+                                  focusedBorderColor = PrimaryPurple,
+                                  focusedLabelColor = PrimaryPurple,
+                                  focusedLeadingIconColor = PrimaryPurple
                             )
                         )
 
@@ -407,8 +500,6 @@ fun EditProfileScreen(
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Department Dropdown
                     ExposedDropdownMenuBox(
@@ -456,6 +547,285 @@ fun EditProfileScreen(
                             }
                         }
                     }
+                }
+            }
+
+            // 3. Personal Information Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Personal Information",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+
+                    OutlinedTextField(
+                        value = maritalStatus,
+                        onValueChange = { maritalStatus = it },
+                        label = { Text("Marital Status") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = bloodGroup,
+                        onValueChange = { bloodGroup = it },
+                        label = { Text("Blood Group") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = physicallyChallenged,
+                        onValueChange = { physicallyChallenged = it },
+                        label = { Text("Physically Challenged (Yes/No)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = currentAddress,
+                        onValueChange = { currentAddress = it },
+                        label = { Text("Current Address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = permanentAddress,
+                        onValueChange = { permanentAddress = it },
+                        label = { Text("Permanent Address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+                }
+            }
+
+            // 4. Family Information Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Family Information",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+
+                    OutlinedTextField(
+                        value = fathersName,
+                        onValueChange = { fathersName = it },
+                        label = { Text("Father's Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = mothersName,
+                        onValueChange = { mothersName = it },
+                        label = { Text("Mother's Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+                }
+            }
+
+            // 5. Emergency Contact Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Emergency Contact",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+
+                    OutlinedTextField(
+                        value = emergencyName,
+                        onValueChange = { emergencyName = it },
+                        label = { Text("Contact Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = emergencyNumber,
+                        onValueChange = { emergencyNumber = it },
+                        label = { Text("Contact Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = emergencyRelation,
+                        onValueChange = { emergencyRelation = it },
+                        label = { Text("Relation") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+                }
+            }
+
+            // 6. Bank Details Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Bank Details",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+
+                    OutlinedTextField(
+                        value = bankName,
+                        onValueChange = { bankName = it },
+                        label = { Text("Bank Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = accountHolder,
+                        onValueChange = { accountHolder = it },
+                        label = { Text("Account Holder Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = accountNumber,
+                        onValueChange = { accountNumber = it },
+                        label = { Text("Account Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = ifscCode,
+                        onValueChange = { ifscCode = it },
+                        label = { Text("IFSC Code") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = upiId,
+                        onValueChange = { upiId = it },
+                        label = { Text("UPI ID") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+                }
+            }
+
+            // 7. Employment Information Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Employment Information",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+
+                    OutlinedTextField(
+                        value = uan,
+                        onValueChange = { uan = it },
+                        label = { Text("UAN") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = pan,
+                        onValueChange = { pan = it },
+                        label = { Text("PAN Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = pfNumber,
+                        onValueChange = { pfNumber = it },
+                        label = { Text("PF Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = pfJoining,
+                        onValueChange = { pfJoining = it },
+                        label = { Text("PF Joining Date") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = esiNumber,
+                        onValueChange = { esiNumber = it },
+                        label = { Text("ESI Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = esiJoining,
+                        onValueChange = { esiJoining = it },
+                        label = { Text("ESI Joining Date") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = epsNumber,
+                        onValueChange = { epsNumber = it },
+                        label = { Text("EPS Number") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
+
+                    OutlinedTextField(
+                        value = epsExit,
+                        onValueChange = { epsExit = it },
+                        label = { Text("EPS Exit Date") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryPurple, focusedLabelColor = PrimaryPurple)
+                    )
                 }
             }
 

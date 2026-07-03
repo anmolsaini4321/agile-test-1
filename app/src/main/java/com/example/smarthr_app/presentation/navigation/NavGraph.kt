@@ -245,6 +245,7 @@ fun NavGraph(
                 taskViewModel = taskViewModel,
                 leaveViewModel = leaveViewModel,
                 attendanceViewModel = attendanceViewModel,
+                meetingViewModel = meetingViewModel,
                 onLogout = {
                     authViewModel.logout()
                     navController.navigate(Screen.RoleSelection.route) {

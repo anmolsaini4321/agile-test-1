@@ -13,6 +13,7 @@ import com.example.smarthr_app.data.model.User
 import com.example.smarthr_app.data.model.UserDto
 import com.example.smarthr_app.data.model.UserRegisterRequest
 import com.example.smarthr_app.data.model.UserRole
+import com.example.smarthr_app.data.model.ExtraProfileDetails
 import com.example.smarthr_app.data.remote.RetrofitInstance
 import com.example.smarthr_app.utils.Resource
 import kotlinx.coroutines.flow.Flow
@@ -371,4 +372,14 @@ class AuthRepository(private val dataStoreManager: DataStoreManager) {
     val user: Flow<User?> = dataStoreManager.user
     val isLoggedIn: Flow<Boolean> = dataStoreManager.isLoggedIn
     val token: Flow<String?> = dataStoreManager.token
+    val extraProfileDetails: Flow<ExtraProfileDetails?> = dataStoreManager.extraProfileDetails
+    val onDutyHistory: Flow<List<com.example.smarthr_app.data.model.OnDutyRecord>> = dataStoreManager.onDutyHistory
+
+    suspend fun saveExtraProfileDetails(details: ExtraProfileDetails) {
+        dataStoreManager.saveExtraProfileDetails(details)
+    }
+
+    suspend fun saveOnDutyRecord(record: com.example.smarthr_app.data.model.OnDutyRecord) {
+        dataStoreManager.saveOnDutyRecord(record)
+    }
 }

@@ -12,6 +12,7 @@ import com.example.smarthr_app.data.model.UpdateProfileRequest
 import com.example.smarthr_app.data.model.User
 import com.example.smarthr_app.data.model.UserDto
 import com.example.smarthr_app.data.model.UserRegisterRequest
+import com.example.smarthr_app.data.model.ExtraProfileDetails
 import com.example.smarthr_app.data.repository.AuthRepository
 import com.example.smarthr_app.utils.Resource
 import kotlinx.coroutines.flow.Flow
@@ -181,4 +182,18 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         _uploadImageState.value = null
     }
 
+    val extraProfileDetails: Flow<ExtraProfileDetails?> = authRepository.extraProfileDetails
+    val onDutyHistory: Flow<List<com.example.smarthr_app.data.model.OnDutyRecord>> = authRepository.onDutyHistory
+
+    fun saveExtraProfileDetails(details: ExtraProfileDetails) {
+        viewModelScope.launch {
+            authRepository.saveExtraProfileDetails(details)
+        }
+    }
+
+    fun saveOnDutyRecord(record: com.example.smarthr_app.data.model.OnDutyRecord) {
+        viewModelScope.launch {
+            authRepository.saveOnDutyRecord(record)
+        }
+    }
 }

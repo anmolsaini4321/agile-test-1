@@ -11,23 +11,23 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 // CrewHQ Colors - consistent across light and dark themes
-val PrimaryPurple = Color(0xFF7C4DFF)
-val SecondaryPurple = Color(0xFF9C27B0)
-val LightPurple = Color(0xFFE1BEE7)
-val BackgroundLight = Color(0xFFF5F5F5)
-val BackgroundDark = Color(0xFF121212)
+val PrimaryPurple = Color(0xFF6366F1) // Electric Indigo
+val SecondaryPurple = Color(0xFFD946EF) // Hot Magenta
+val LightPurple = Color(0xFFC7D2FE) // Lavender Indigo
+val BackgroundLight = Color(0xFFF8FAFC) // Slate 50
+val BackgroundDark = Color(0xFF0F172A) // Slate 900
 val CardBackground = Color(0xFFFFFFFF)
-val CardBackgroundDark = Color(0xFF1E1E1E)
-val TextPrimary = Color(0xFF212121)
-val TextPrimaryDark = Color(0xFFE0E0E0)
-val TextSecondary = Color(0xFF757575)
-val TextSecondaryDark = Color(0xFFB0B0B0)
-val Success = Color(0xFF4CAF50)
-val Warning = Color(0xFFFF9800)
-val Error = Color(0xFFE91E63)
+val CardBackgroundDark = Color(0xFF1E293B) // Slate 800
+val TextPrimary = Color(0xFF0F172A)
+val TextPrimaryDark = Color(0xFFF8FAFC) // Crisp Off-White (Slate 50)
+val TextSecondary = Color(0xFF475569) // Cool Gray (Slate 600)
+val TextSecondaryDark = Color(0xFF94A3B8) // Premium cool slate gray (Slate 400)
+val Success = Color(0xFF10B981) // Emerald Green
+val Warning = Color(0xFFF59E0B) // Amber Yellow
+val Error = Color(0xFFEF4444) // Rose Red
 
 // CrewHQ Dark Gradient Theme Colors
-val BackgroundGradientStart = Color(0xFF020E17)
-val BackgroundGradientEnd = Color(0xFF02070D)
-val GlowCyan = Color(0xFF0A2B42)
-val CrewHQCardBg = Color(0xCC111C2A) // 80% opacity dark slate blue
+val BackgroundGradientStart = Color(0xFF030712) // Gray 950
+val BackgroundGradientEnd = Color(0xFF090D16)
+val GlowCyan = Color(0xFF1E1E38) // Deep Indigo Glow
+val CrewHQCardBg = Color(0xEE0F172A) // 93% opacity Slate 900 for premium glassmorphism

@@ -18,6 +18,8 @@ A comprehensive Crew & Operations Management System built with modern Android de
 <p align="center">
   <img src="screenshots/employee_dashboard.png" width="250" alt="Employee Dashboard" />
   <img src="screenshots/employee_attendance.png" width="250" alt="Employee Attendance" />
+  <img src="screenshots/employee_od_form.png" width="250" alt="Employee On Duty Form" />
+  <img src="screenshots/employee_profile.png" width="250" alt="Employee Profile" />
   <img src="screenshots/employee_tasks.png" width="250" alt="Employee Tasks" />
   <img src="screenshots/employee_leaves.png" width="250" alt="Employee Leaves" />
 </p>

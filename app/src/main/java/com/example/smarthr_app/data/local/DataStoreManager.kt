@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.smarthr_app.data.model.User
+import com.example.smarthr_app.data.model.ExtraProfileDetails
+import com.example.smarthr_app.data.model.OnDutyRecord
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,6 +22,8 @@ class DataStoreManager(private val context: Context) {
         private val IS_LOGGED_IN_KEY = booleanPreferencesKey("is_logged_in")
         private val TOKEN_KEY = stringPreferencesKey("token")
         private val PENDING_COMPANY_CODE_KEY = stringPreferencesKey("pending_company_code")
+        private val EXTRA_PROFILE_KEY = stringPreferencesKey("extra_profile_details")
+        private val ON_DUTY_HISTORY_KEY = stringPreferencesKey("on_duty_history")
     }
 
     private val gson = Gson()
@@ -47,6 +51,12 @@ class DataStoreManager(private val context: Context) {
         }
     }
 
+    suspend fun saveExtraProfileDetails(details: ExtraProfileDetails) {
+        context.dataStore.edit { preferences ->
+            preferences[EXTRA_PROFILE_KEY] = gson.toJson(details)
+        }
+    }
+
     val user: Flow<User?> = context.dataStore.data.map { preferences ->
         val userJson = preferences[USER_KEY]
         if (userJson != null) {
@@ -64,6 +74,43 @@ class DataStoreManager(private val context: Context) {
 
     val pendingCompanyCode: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[PENDING_COMPANY_CODE_KEY]
+    }
+
+    val extraProfileDetails: Flow<ExtraProfileDetails?> = context.dataStore.data.map { preferences ->
+        val json = preferences[EXTRA_PROFILE_KEY]
+        if (json != null) {
+            gson.fromJson(json, ExtraProfileDetails::class.java)
+        } else null
+    }
+
+    val onDutyHistory: Flow<List<OnDutyRecord>> = context.dataStore.data.map { preferences ->
+        val json = preferences[ON_DUTY_HISTORY_KEY]
+        if (json != null) {
+            try {
+                val type = object : com.google.gson.reflect.TypeToken<List<OnDutyRecord>>() {}.type
+                gson.fromJson(json, type) ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else emptyList()
+    }
+
+    suspend fun saveOnDutyRecord(record: OnDutyRecord) {
+        context.dataStore.edit { preferences ->
+            val json = preferences[ON_DUTY_HISTORY_KEY]
+            val list = if (json != null) {
+                try {
+                    val type = object : com.google.gson.reflect.TypeToken<List<OnDutyRecord>>() {}.type
+                    gson.fromJson<List<OnDutyRecord>>(json, type).toMutableList()
+                } catch (e: Exception) {
+                    mutableListOf()
+                }
+            } else {
+                mutableListOf()
+            }
+            list.add(0, record)
+            preferences[ON_DUTY_HISTORY_KEY] = gson.toJson(list)
+        }
     }
 
     suspend fun logout() {
