@@ -4,24 +4,24 @@ A comprehensive Crew & Operations Management System built with modern Android de
 
 ## 📱 Screenshots
 
-### Landing & Authentication
+### 👤 Employee Features
 <p align="center">
-  <img src="screenshots/login_register.png" width="250" alt="Get Started / Login Screen" />
+  <img src="screenshots/employee_dashboard.png" width="180" alt="Employee Dashboard" />
+  <img src="screenshots/employee_attendance.png" width="180" alt="Employee Attendance" />
+  <img src="screenshots/employee_tasks.png" width="180" alt="Employee Tasks" />
+  <img src="screenshots/employee_leaves.png" width="180" alt="Employee Leaves" />
 </p>
 
-### Admin Dashboard
+### 👑 Admin Features
 <p align="center">
-  <img src="screenshots/admin_dashboard.png" width="250" alt="Admin Dashboard" />
+  <img src="screenshots/admin_dashboard.png" width="180" alt="Admin Dashboard" />
+  <img src="screenshots/admin_employees.png" width="180" alt="Admin Manage Employees" />
+  <img src="screenshots/admin_leaves.png" width="180" alt="Admin Leave Management" />
 </p>
 
-### Employee Dashboard
+### 🌐 General
 <p align="center">
-  <img src="screenshots/employee_dashboard.png" width="250" alt="Employee Dashboard" />
-  <img src="screenshots/employee_attendance.png" width="250" alt="Employee Attendance" />
-  <img src="screenshots/employee_od_form.png" width="250" alt="Employee On Duty Form" />
-  <img src="screenshots/employee_profile.png" width="250" alt="Employee Profile" />
-  <img src="screenshots/employee_tasks.png" width="250" alt="Employee Tasks" />
-  <img src="screenshots/employee_leaves.png" width="250" alt="Employee Leaves" />
+  <img src="screenshots/login_register.png" width="180" alt="Landing & Authentication" />
 </p>
 
 ## 🚀 Features
