@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrewHQ - Super Admin Portal</title>
+    <!-- Modern Typography: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Google Material Symbols (Icons) -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <span class="material-symbols-outlined logo-icon">shield_person</span>
+                <h2>CrewHQ</h2>
+                <span class="portal-badge">Super Admin</span>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" id="menu-dashboard" data-section="dashboard">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="#" class="menu-item" id="menu-directory" data-section="directory">
+                    <span class="material-symbols-outlined">corporate_fare</span>
+                    Company Directory
+                </a>
+                <div class="menu-separator"></div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-avatar-small">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256"
+                        alt="Super Admin Profile">
+                    <div class="user-status-dot online"></div>
+                </div>
+                <div class="user-info-small">
+                    <h4>Sarah Jenkins</h4>
+                    <p>System Owner</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>Dashboard Overview</h1>
+                    <p class="subtitle" id="current-date">Saturday, July 4, 2026</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="header-divider"></div>
+                    <button class="btn btn-primary" id="btn-add-mock-admin">
+                        <span class="material-symbols-outlined">add</span>
+                        New Registration Request
+                    </button>
+                </div>
+            </header>
+
+            <!-- SECTION 1: DASHBOARD VIEW -->
+            <div id="section-dashboard" class="content-section">
+                <!-- Metrics Cards Grid -->
+                <section class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon bg-indigo">
+                            <span class="material-symbols-outlined">supervised_user_circle</span>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Total Admins</h3>
+                            <p class="value" id="stat-total-admins">0</p>
+                            <p class="trend positive">
+                                <span class="material-symbols-outlined">trending_up</span>
+                                +12% this month
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon bg-amber">
+                            <span class="material-symbols-outlined">pending_actions</span>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Pending Approval</h3>
+                            <p class="value" id="stat-pending-approvals">0</p>
+                            <p class="trend neutral">Requires action</p>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon bg-emerald">
+                            <span class="material-symbols-outlined">domain</span>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Active Companies</h3>
+                            <p class="value" id="stat-active-companies">0</p>
+                            <p class="trend positive">
+                                <span class="material-symbols-outlined">trending_up</span>
+                                +3 new weekly
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon bg-rose">
+                            <span class="material-symbols-outlined">credit_card</span>
+                        </div>
+                        <div class="metric-info">
+                            <h3>Monthly Revenue</h3>
+                            <p class="value">$12,450</p>
+                            <p class="trend positive">
+                                <span class="material-symbols-outlined">trending_up</span>
+                                +8.4% growth
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Main Panel -->
+                <section class="panel-section">
+                    <div class="panel-header">
+                        <div class="panel-tabs">
+                            <button class="tab-link active" data-tab="all">All Registered Admins</button>
+                            <button class="tab-link" data-tab="pending">
+                                Pending Requests
+                                <span class="badge" id="badge-pending-count">0</span>
+                            </button>
+                            <button class="tab-link" data-tab="approved">Approved & Active</button>
+                        </div>
+
+                        <!-- Search & Filter Controls -->
+                        <div class="panel-controls">
+                            <div class="search-box">
+                                <span class="material-symbols-outlined search-icon">search</span>
+                                <input type="text" id="admin-search-input"
+                                    placeholder="Search by name, email, or company...">
+                            </div>
+                            <div class="filter-box">
+                                <select id="feature-filter">
+                                    <option value="all">All Features</option>
+                                    <option value="ATTENDANCE">Attendance</option>
+                                    <option value="LEAVES">Leaves</option>
+                                    <option value="TASKS">Tasks</option>
+                                    <option value="MEETINGS">Meetings</option>
+                                    <option value="CHAT">Chat</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <!-- Admins Table -->
+                        <div class="table-container">
+                            <table class="admins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Admin Info</th>
+                                        <th>Email Address</th>
+                                        <th>Company</th>
+                                        <th>Status</th>
+                                        <th>Licensed Modules</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admins-table-body">
+                                    <!-- Dynamic Rows Go Here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Empty State -->
+                        <div class="empty-state hidden" id="table-empty-state">
+                            <span class="material-symbols-outlined empty-icon">sentiment_dissatisfied</span>
+                            <h3>No Admins Found</h3>
+                            <p>We couldn't find any registered admins matching your search or filters.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SECTION 2: COMPANY & EMPLOYEE DIRECTORY VIEW -->
+            <div id="section-directory" class="content-section hidden">
+                <div class="directory-layout-grid">
+                    <!-- Left: Companies Selector List -->
+                    <div class="directory-sidebar-card">
+                        <h3>Registered Companies</h3>
+                        <p class="subtitle">Select a company to load directory</p>
+                        <div class="company-list-group" id="dir-company-list">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Directory Details -->
+                    <div class="directory-details-card" id="dir-details-card">
+                        <!-- Selection prompt -->
+                        <div class="select-prompt" id="dir-select-prompt">
+                            <span class="material-symbols-outlined prompt-icon">corporate_fare</span>
+                            <h3>Select a Company</h3>
+                            <p>Please select one of the registered companies on the left to view administrator details and their active employees directory.</p>
+                        </div>
+
+                        <!-- Active Company Content -->
+                        <div class="details-content hidden" id="dir-details-content">
+                            <!-- Admin Details card -->
+                            <div class="sub-details-card">
+                                <h4>Company Administrator Details</h4>
+                                <div class="admin-profile-details">
+                                    <img src="" id="dir-admin-avatar" alt="Admin Avatar" class="dir-admin-img">
+                                    <div class="admin-fields-grid">
+                                        <div class="field-row">
+                                            <span class="field-label">Administrator Name:</span>
+                                            <strong id="dir-admin-name">Vikash Gorai</strong>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Email Address:</span>
+                                            <span id="dir-admin-email">vikashgorai985276@gmail.com</span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Company Name:</span>
+                                            <span id="dir-admin-company">Wickcore Systems</span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Company Code:</span>
+                                            <span id="dir-admin-code" class="mono-code-badge">WCK90</span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Account Status:</span>
+                                            <span id="dir-admin-status" class="badge-status approved">Approved</span>
+                                        </div>
+                                        <div class="field-row">
+                                            <span class="field-label">Licensed Features:</span>
+                                            <div id="dir-admin-features" class="features-list"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Employees list card -->
+                            <div class="sub-details-card margin-top-20">
+                                <div class="card-title-row">
+                                    <h4>Active Employees Directory</h4>
+                                    <span class="employee-total-badge" id="dir-employee-count">0 employees</span>
+                                </div>
+                                <div class="table-container">
+                                    <table class="directory-employees-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Employee Name</th>
+                                                <th>Email Address</th>
+                                                <th>Department / Role</th>
+                                                <th class="text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dir-employees-list-body">
+                                            <!-- Dynamically loaded employees -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- License Customization Modal -->
+    <div class="modal-overlay hidden" id="feature-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <span class="material-symbols-outlined title-icon">card_membership</span>
+                    <div>
+                        <h2>Edit License Permissions</h2>
+                        <p class="subtitle" id="modal-admin-subtitle">Modify feature flags for Admin</p>
+                    </div>
+                </div>
+                <button class="close-btn" id="btn-close-modal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="admin-summary-box">
+                    <div class="summary-details">
+                        <h3 id="modal-admin-name">Vikash Gorai</h3>
+                        <p id="modal-admin-email">vikash.gorai@net.in</p>
+                        <div class="modal-company-badge" id="modal-admin-company">Wickcore Systems (Code: WCK90)</div>
+                    </div>
+                </div>
+
+                <div class="feature-selector-wrapper">
+                    <h3>Enabled Modules</h3>
+                    <p class="info-text">Configure feature accessibility. Checked modules will be unlocked for the admin
+                        and their employees, unchecked modules will be locked.</p>
+
+                    <div class="feature-list">
+                        <!-- Feature Row: Attendance -->
+                        <div class="feature-row">
+                            <div class="feature-meta">
+                                <span
+                                    class="material-symbols-outlined feature-icon icon-attendance">where_to_vote</span>
+                                <div class="feature-desc">
+                                    <h4>Geofenced Attendance System</h4>
+                                    <p>Enables check-in/out validating GPS coordinates against configured office
+                                        location radii.</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="chk-attendance" value="ATTENDANCE">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Feature Row: Leaves -->
+                        <div class="feature-row">
+                            <div class="feature-meta">
+                                <span class="material-symbols-outlined feature-icon icon-leaves">calendar_today</span>
+                                <div class="feature-desc">
+                                    <h4>Leave Management</h4>
+                                    <p>Allows applying for leaves, tracking approval state workflows, and viewing leave
+                                        analytics.</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="chk-leaves" value="LEAVES">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Feature Row: Tasks -->
+                        <div class="feature-row">
+                            <div class="feature-meta">
+                                <span class="material-symbols-outlined feature-icon icon-tasks">assignment</span>
+                                <div class="feature-desc">
+                                    <h4>Task Management System</h4>
+                                    <p>Enables task assignment to teams, priorities, deadline tracking, and file
+                                        uploads.</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="chk-tasks" value="TASKS">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Feature Row: Meetings -->
+                        <div class="feature-row">
+                            <div class="feature-meta">
+                                <span class="material-symbols-outlined feature-icon icon-meetings">groups</span>
+                                <div class="feature-desc">
+                                    <h4>Meeting Scheduler</h4>
+                                    <p>Facilitates booking meeting schedules, invite responses, and syncing with Google
+                                        Calendar.</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="chk-meetings" value="MEETINGS">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <!-- Feature Row: Chat -->
+                        <div class="feature-row">
+                            <div class="feature-meta">
+                                <span class="material-symbols-outlined feature-icon icon-chat">chat</span>
+                                <div class="feature-desc">
+                                    <h4>Real-Time Chat & Communications</h4>
+                                    <p>Unlocks instant chat messages (text/images) between employees and threaded
+                                        comments on tasks.</p>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="chk-chat" value="CHAT">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                <button class="btn btn-primary" id="btn-save-features">Save Permissions</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Details Modal -->
+    <div class="modal-overlay hidden" id="employee-modal">
+        <div class="modal employee-profile-modal">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <span class="material-symbols-outlined title-icon">badge</span>
+                    <div>
+                        <h2>Employee Profile Folder</h2>
+                        <p class="subtitle" id="emp-modal-subtitle">Full personnel registry record</p>
+                    </div>
+                </div>
+                <button class="close-btn" id="btn-close-emp-modal">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Profile Banner Summary -->
+                <div class="emp-profile-banner">
+                    <img id="emp-modal-avatar" src="" alt="Employee Avatar" class="emp-large-avatar">
+                    <div class="emp-banner-details">
+                        <h3 id="emp-modal-name">Rohan Gupta</h3>
+                        <p id="emp-modal-designation">Senior Developer</p>
+                        <div class="emp-banner-badges">
+                            <span id="emp-modal-dept-badge" class="badge-dept">Engineering</span>
+                            <span id="emp-modal-code-badge" class="badge-code">SMT24</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid Details Section -->
+                <div class="emp-details-grid">
+                    <!-- Column 1: Personal Details -->
+                    <div class="details-group-box">
+                        <h4 class="group-title"><span class="material-symbols-outlined">person</span> Personal Information</h4>
+                        <div class="info-grid-2">
+                            <div class="info-item">
+                                <label>Gender</label>
+                                <span id="emp-modal-gender">Male</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Marital Status</label>
+                                <span id="emp-modal-marital">Single</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Blood Group</label>
+                                <span id="emp-modal-blood">O+</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Physically Challenged</label>
+                                <span id="emp-modal-handicapped">No</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Residential Addresses -->
+                    <div class="details-group-box">
+                        <h4 class="group-title"><span class="material-symbols-outlined">home</span> Residential Address</h4>
+                        <div class="info-vertical">
+                            <div class="info-item">
+                                <label>Current Address</label>
+                                <span id="emp-modal-current-address">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Permanent Address</label>
+                                <span id="emp-modal-permanent-address">Not specified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Family Information -->
+                    <div class="details-group-box">
+                        <h4 class="group-title"><span class="material-symbols-outlined">family_restroom</span> Family Information</h4>
+                        <div class="info-grid-2">
+                            <div class="info-item">
+                                <label>Father's Name</label>
+                                <span id="emp-modal-father">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Mother's Name</label>
+                                <span id="emp-modal-mother">Not specified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 4: Emergency Contacts -->
+                    <div class="details-group-box">
+                        <h4 class="group-title"><span class="material-symbols-outlined">emergency_share</span> Emergency Contact</h4>
+                        <div class="info-grid-3">
+                            <div class="info-item">
+                                <label>Contact Name</label>
+                                <span id="emp-modal-emergency-name">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Relationship</label>
+                                <span id="emp-modal-emergency-relation">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Phone Number</label>
+                                <span id="emp-modal-emergency-phone">Not specified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 5: Bank Details -->
+                    <div class="details-group-box span-2">
+                        <h4 class="group-title"><span class="material-symbols-outlined">account_balance</span> Bank Account & Payments</h4>
+                        <div class="info-grid-4">
+                            <div class="info-item">
+                                <label>Bank Name</label>
+                                <span id="emp-modal-bank-name">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Account Holder Name</label>
+                                <span id="emp-modal-bank-holder">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Account Number</label>
+                                <span id="emp-modal-bank-number">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>IFSC Code</label>
+                                <span id="emp-modal-bank-ifsc">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>UPI ID</label>
+                                <span id="emp-modal-bank-upi">Not specified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 6: Statutory Employment Info -->
+                    <div class="details-group-box span-2">
+                        <h4 class="group-title"><span class="material-symbols-outlined">work</span> Statutory & Payroll Details</h4>
+                        <div class="info-grid-4">
+                            <div class="info-item">
+                                <label>UAN Number</label>
+                                <span id="emp-modal-uan">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>PAN Card Number</label>
+                                <span id="emp-modal-pan">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>PF Account Number</label>
+                                <span id="emp-modal-pf">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>PF Joining Date</label>
+                                <span id="emp-modal-pf-date">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>ESI Number</label>
+                                <span id="emp-modal-esi">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>ESI Joining Date</label>
+                                <span id="emp-modal-esi-date">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>EPS Number</label>
+                                <span id="emp-modal-eps">Not specified</span>
+                            </div>
+                            <div class="info-item">
+                                <label>EPS Exit Date</label>
+                                <span id="emp-modal-eps-exit">Not specified</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-close-emp-modal-footer">Close Folder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
