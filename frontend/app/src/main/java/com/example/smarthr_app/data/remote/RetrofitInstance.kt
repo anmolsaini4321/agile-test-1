@@ -10,7 +10,7 @@ object RetrofitInstance {
 
     // Use the actual IP address of your host machine running the backend server.
     // 10.0.2.2 is the emulator loopback, 192.168.10.136 is the PC's Wi-Fi IP address.
-    const val BASE_URL = "http://192.168.10.136:9090/"
+    const val BASE_URL = "https://kaampe-demo-backend.onrender.com/"
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }

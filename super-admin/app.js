@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CREWHQ - SUPER ADMIN PORTAL STATE & CONTROLLER LOGIC
  */
 
@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load data from live backend with fallback
         try {
-            const response = await fetch('http://192.168.10.136:9090/super-admin/companies');
+            const response = await fetch('https://kaampe-demo-backend.onrender.com/super-admin/companies');
             if (response.ok) {
                 admins = await response.json();
                 console.log("Successfully loaded companies from live database:", admins);
@@ -732,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let employees = [];
         try {
-            const response = await fetch(`http://192.168.10.136:9090/companies/code/${company.companyCode}/employees`);
+            const response = await fetch(`https://kaampe-demo-backend.onrender.com/companies/code/${company.companyCode}/employees`);
             if (response.ok) {
                 employees = await response.json();
             } else {
@@ -819,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
 
             try {
-                await fetch(`http://192.168.10.136:9090/super-admin/companies/${id}/status?status=APPROVED`, {
+                await fetch(`https://kaampe-demo-backend.onrender.com/super-admin/companies/${id}/status?status=APPROVED`, {
                     method: 'POST'
                 });
             } catch (e) {
@@ -879,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
 
             try {
-                await fetch(`http://192.168.10.136:9090/super-admin/companies/${id}/status?status=SUSPENDED`, {
+                await fetch(`https://kaampe-demo-backend.onrender.com/super-admin/companies/${id}/status?status=SUSPENDED`, {
                     method: 'POST'
                 });
             } catch (e) {
@@ -931,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
 
             try {
-                await fetch(`http://192.168.10.136:9090/super-admin/companies/${activeEditAdminId}/features`, {
+                await fetch(`https://kaampe-demo-backend.onrender.com/super-admin/companies/${activeEditAdminId}/features`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -975,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch full profile from backend
         let profile = null;
         try {
-            const response = await fetch(`http://192.168.10.136:9090/users/${emp.id}`);
+            const response = await fetch(`https://kaampe-demo-backend.onrender.com/users/${emp.id}`);
             if (response.ok) {
                 profile = await response.json();
             } else {
@@ -1003,11 +1003,11 @@ document.addEventListener('DOMContentLoaded', () => {
             empModalAvatar.src = user.imageUrl;
         }
         empModalName.textContent = user.name || 'Unknown';
-        empModalDesignation.textContent = `${positionLabel} · ${roleLabel}`;
+        empModalDesignation.textContent = `${positionLabel} Â· ${roleLabel}`;
         empModalDeptBadge.textContent = deptLabel;
         empModalCodeBadge.textContent = user.companyCode || companyCode;
 
-        // Personal info — fields the backend UserResponseDto exposes
+        // Personal info â€” fields the backend UserResponseDto exposes
         const set = (el, val) => { if (el) el.textContent = val || na; };
         set(empModalGender, user.gender);
         set(empModalMarital, na); // not in UserResponseDto
@@ -1016,21 +1016,21 @@ document.addEventListener('DOMContentLoaded', () => {
         set(empModalCurrentAddress, na);
         set(empModalPermanentAddress, na);
 
-        // Family / emergency — not stored in backend yet
+        // Family / emergency â€” not stored in backend yet
         set(empModalFather, na);
         set(empModalMother, na);
         set(empModalEmergencyName, na);
         set(empModalEmergencyRelation, na);
         set(empModalEmergencyPhone, user.phone || na);
 
-        // Bank details — not in backend yet
+        // Bank details â€” not in backend yet
         set(empModalBankName, na);
         set(empModalBankHolder, na);
         set(empModalBankNumber, na);
         set(empModalBankIfsc, na);
         set(empModalBankUpi, na);
 
-        // Statutory — not in backend yet
+        // Statutory â€” not in backend yet
         set(empModalUan, na);
         set(empModalPan, na);
         set(empModalPf, na);
@@ -1040,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
         set(empModalEps, na);
         set(empModalEpsExit, na);
 
-        // Show extra info we DO have — email and phone in the subtitle
+        // Show extra info we DO have â€” email and phone in the subtitle
         const subtitleEl = document.getElementById('emp-modal-subtitle');
         if (subtitleEl) {
             subtitleEl.innerHTML = `
@@ -1227,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let employees = [];
         try {
-            const response = await fetch(`http://192.168.10.136:9090/companies/code/${companyCode}/employees`);
+            const response = await fetch(`https://kaampe-demo-backend.onrender.com/companies/code/${companyCode}/employees`);
             if (response.ok) {
                 employees = await response.json();
             } else {
@@ -1263,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let trailPoints = [];
         try {
-            const response = await fetch(`http://192.168.10.136:9090/attendances/trail/employee/${employeeId}?date=${date}`);
+            const response = await fetch(`https://kaampe-demo-backend.onrender.com/attendances/trail/employee/${employeeId}?date=${date}`);
             if (response.ok) {
                 trailPoints = await response.json();
             } else {
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch employee details for the sidebar panel
         let empData = { name: 'Employee', imageUrl: '' };
         try {
-            const r = await fetch(`http://192.168.10.136:9090/users/${employeeId}`);
+            const r = await fetch(`https://kaampe-demo-backend.onrender.com/users/${employeeId}`);
             if (r.ok) empData = await r.json();
         } catch(e) { console.log('Could not prefetch employee data', e); }
         liveEmployeeData = empData;
@@ -1318,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('trail-date-select').value = today;
         let historicalPoints = [];
         try {
-            const r = await fetch(`http://192.168.10.136:9090/attendances/trail/employee/${employeeId}?date=${today}`);
+            const r = await fetch(`https://kaampe-demo-backend.onrender.com/attendances/trail/employee/${employeeId}?date=${today}`);
             if (r.ok) historicalPoints = await r.json();
         } catch(e) { console.log('Could not load historical trail', e); }
 
@@ -1361,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : 'Waiting...';
 
         // Connect WebSocket via SockJS + STOMP
-        const socket = new SockJS('http://192.168.10.136:9090/chat-websocket');
+        const socket = new SockJS('https://kaampe-demo-backend.onrender.com/chat-websocket');
         stompClient = Stomp.over(socket);
         stompClient.debug = null; // Silence STOMP debug logs
 
@@ -1370,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const point = JSON.parse(message.body);
                 appendLivePoint(point);
             });
-            showToast(`🔴 Live tracking started for ${empData.name || 'employee'}.`, 'success');
+            showToast(`ðŸ”´ Live tracking started for ${empData.name || 'employee'}.`, 'success');
         }, (error) => {
             console.error('STOMP connection error:', error);
             showToast('Could not connect to live tracking server.', 'danger');
@@ -1604,3 +1604,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run Initialization
     init();
 });
+
