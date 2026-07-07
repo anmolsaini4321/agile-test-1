@@ -15,6 +15,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet" />
+    <!-- Leaflet.js Map Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -36,6 +38,10 @@
                 <a href="#" class="menu-item" id="menu-directory" data-section="directory">
                     <span class="material-symbols-outlined">corporate_fare</span>
                     Company Directory
+                </a>
+                <a href="#" class="menu-item" id="menu-trail" data-section="trail">
+                    <span class="material-symbols-outlined">route</span>
+                    Location Trails
                 </a>
                 <div class="menu-separator"></div>
             </nav>
@@ -268,6 +274,108 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: EMPLOYEE LOCATION TRAILS -->
+            <div id="section-trail" class="content-section hidden">
+                <div class="trail-layout-grid">
+                    <!-- Left: Trail Controls and Employee Selector -->
+                    <div class="trail-sidebar-card">
+                        <div class="trail-sidebar-header">
+                            <h3>Location Trails</h3>
+                            <!-- LIVE Status Badge -->
+                            <span class="live-badge hidden" id="live-status-badge">
+                                <span class="live-dot"></span> LIVE
+                            </span>
+                        </div>
+                        <p class="subtitle">Select employee and date to view trail path</p>
+                        
+                        <div class="form-group margin-top-15">
+                            <label for="trail-company-select" class="form-label">Select Company</label>
+                            <select id="trail-company-select" class="form-control">
+                                <option value="">-- Choose Company --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group margin-top-15">
+                            <label for="trail-employee-select" class="form-label">Select Employee</label>
+                            <select id="trail-employee-select" class="form-control" disabled>
+                                <option value="">-- Choose Employee --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group margin-top-15">
+                            <label for="trail-date-select" class="form-label">Select Date</label>
+                            <input type="date" id="trail-date-select" class="form-control">
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="trail-action-buttons margin-top-20">
+                            <button class="btn btn-secondary width-100" id="btn-load-trail" style="margin-bottom: 10px;">
+                                <span class="material-symbols-outlined">map</span>
+                                View Historical Trail
+                            </button>
+                            <button class="btn btn-live width-100" id="btn-live-track">
+                                <span class="material-symbols-outlined">sensors</span>
+                                Start Live Tracking
+                            </button>
+                        </div>
+
+                        <!-- Live Employee Info -->
+                        <div class="live-employee-panel hidden" id="live-employee-panel">
+                            <div class="live-emp-row">
+                                <img id="live-emp-avatar" src="" class="live-emp-avatar" alt="">
+                                <div>
+                                    <div class="live-emp-name" id="live-emp-name">—</div>
+                                    <div class="live-emp-status">Transmitting location...</div>
+                                </div>
+                            </div>
+                            <div class="live-stats-grid">
+                                <div class="live-stat">
+                                    <span class="live-stat-label">Last update</span>
+                                    <span class="live-stat-value" id="live-last-update">—</span>
+                                </div>
+                                <div class="live-stat">
+                                    <span class="live-stat-label">Points received</span>
+                                    <span class="live-stat-value" id="live-points-count">0</span>
+                                </div>
+                                <div class="live-stat">
+                                    <span class="live-stat-label">Current coords</span>
+                                    <span class="live-stat-value" id="live-current-coords">—</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="trail-info-panel margin-top-20 hidden" id="trail-info-panel">
+                            <h4>Session Summary</h4>
+                            <div class="trail-summary-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Check In:</span>
+                                    <span id="trail-summary-checkin">-</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Check Out:</span>
+                                    <span id="trail-summary-checkout">-</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Total Points:</span>
+                                    <span id="trail-summary-points">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Map Workspace -->
+                    <div class="trail-map-card">
+                        <div id="trail-map" style="width: 100%; height: 550px; border-radius: 12px; background: #2c2f38; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; z-index: 1;">
+                            <div class="map-placeholder" id="map-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px;">
+                                <span class="material-symbols-outlined prompt-icon" style="font-size: 48px; color: #6366f1; margin-bottom: 12px;">satellite_alt</span>
+                                <h3>Real-Time Location Map</h3>
+                                <p style="color: #94a3b8; font-size: 14px; max-width: 320px;">Select a company and employee, then click <strong>"Start Live Tracking"</strong> to watch them live, or choose a date and click <strong>"View Historical Trail"</strong>.</p>
                             </div>
                         </div>
                     </div>
@@ -579,6 +687,10 @@
     <!-- Toast Notification System -->
     <div id="toast-container"></div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- SockJS + STOMP.js for real-time WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script src="app.js"></script>
 </body>
 

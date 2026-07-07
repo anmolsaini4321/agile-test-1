@@ -7,6 +7,8 @@ import android.location.Location
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -31,10 +33,42 @@ class LocationHelper(private val context: Context) {
 
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
-                continuation.resume(location)
+                if (location != null) {
+                    continuation.resume(location)
+                } else {
+                    val cts = CancellationTokenSource()
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        cts.token
+                    )
+                    .addOnSuccessListener { freshLocation ->
+                        continuation.resume(freshLocation)
+                    }
+                    .addOnFailureListener {
+                        continuation.resume(null)
+                    }
+
+                    continuation.invokeOnCancellation {
+                        cts.cancel()
+                    }
+                }
             }
             .addOnFailureListener {
-                continuation.resume(null)
+                val cts = CancellationTokenSource()
+                fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    cts.token
+                )
+                .addOnSuccessListener { freshLocation ->
+                    continuation.resume(freshLocation)
+                }
+                .addOnFailureListener {
+                    continuation.resume(null)
+                }
+
+                continuation.invokeOnCancellation {
+                    cts.cancel()
+                }
             }
     }
 

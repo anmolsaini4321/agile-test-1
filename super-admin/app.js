@@ -304,6 +304,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeView = 'dashboard'; // dashboard, directory
     let selectedCompanyCode = null;
 
+    // Trail Map State variables
+    let trailMap = null;
+    let trailPolyline = null;
+    let trailMarkers = [];
+
+    // Live Tracking State
+    let stompClient = null;
+    let liveTrackingActive = false;
+    let liveEmployeeId = null;
+    let liveEmployeeData = null;
+    let liveMarker = null;
+    let livePolylinePoints = [];
+    let livePointCount = 0;
+    let liveSubscription = null;
+
+
     // DOM Elements
     const adminsTableBody = document.getElementById('admins-table-body');
     const tableEmptyState = document.getElementById('table-empty-state');
@@ -397,18 +413,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddMockAdmin = document.getElementById('btn-add-mock-admin');
 
     // 1. Initialize Application State
-    function init() {
+    async function init() {
         // Set date
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         currentDateEl.textContent = new Date().toLocaleDateString('en-US', options);
 
-        // Load data from LocalStorage
-        const savedAdmins = localStorage.getItem('crewHQ_admins');
-        if (savedAdmins) {
-            admins = JSON.parse(savedAdmins);
-        } else {
-            admins = initialAdmins;
-            saveState();
+        // Load data from live backend with fallback
+        try {
+            const response = await fetch('http://192.168.10.136:9090/super-admin/companies');
+            if (response.ok) {
+                admins = await response.json();
+                console.log("Successfully loaded companies from live database:", admins);
+            } else {
+                throw new Error("HTTP error: " + response.status);
+            }
+        } catch (e) {
+            console.log("Falling back to local storage due to:", e.message);
+            const savedAdmins = localStorage.getItem('crewHQ_admins');
+            if (savedAdmins) {
+                admins = JSON.parse(savedAdmins);
+            } else {
+                admins = initialAdmins;
+                saveState();
+            }
         }
 
         switchView(activeView);
@@ -450,6 +477,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'directory') {
             mainViewTitle.textContent = "Company Directory";
             renderDirectoryView();
+        } else if (viewName === 'trail') {
+            mainViewTitle.textContent = "Employee Location Trails";
+            populateTrailCompanies();
         }
     }
 
@@ -670,60 +700,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function loadCompanyDetails(company) {
+    async function loadCompanyDetails(company) {
         dirSelectPrompt.classList.add('hidden');
         dirDetailsContent.classList.remove('hidden');
 
-        // Admin info
-        dirAdminAvatar.src = getAvatarUrl(company.name);
-        dirAdminName.textContent = company.name;
-        dirAdminEmail.textContent = company.email;
+        // Admin info - live data uses adminName/adminEmail (from SuperAdminCompanyDto)
+        const adminName = company.adminName || company.name || 'Admin';
+        const adminEmail = company.adminEmail || company.email || 'N/A';
+        dirAdminAvatar.src = getAvatarUrl(adminName);
+        dirAdminName.textContent = adminName;
+        dirAdminEmail.textContent = adminEmail;
         dirAdminCompany.textContent = company.companyName;
         dirAdminCode.textContent = company.companyCode;
         
         dirAdminStatus.textContent = company.status;
-        dirAdminStatus.className = `badge-status ${company.status.toLowerCase()}`;
+        dirAdminStatus.className = `badge-status ${company.status ? company.status.toLowerCase() : 'approved'}`;
 
         // Admin features tags
         const features = ["ATTENDANCE", "LEAVES", "TASKS", "MEETINGS", "CHAT"];
+        const allowedFeatures = company.allowedFeatures || features;
         dirAdminFeatures.innerHTML = features.map(f => {
-            const active = company.allowedFeatures.includes(f);
+            const active = allowedFeatures.includes(f);
             return `<span class="feature-tag ${active ? 'active' : 'inactive'}">
                 <span class="material-symbols-outlined" style="font-size:12px;">${getFeatureIcon(f)}</span>
                 ${f.charAt(0) + f.slice(1).toLowerCase()}
             </span>`;
         }).join('');
 
-        // Employees list
-        const employees = mockEmployees[company.companyCode] || [];
-        dirEmployeeCount.textContent = `${employees.length} employee${employees.length === 1 ? '' : 's'}`;
+        // Employees list - fetch from live backend
+        dirEmployeesListBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color:var(--text-muted); font-size:13px;">Loading employees...</td></tr>`;
 
+        let employees = [];
+        try {
+            const response = await fetch(`http://192.168.10.136:9090/companies/code/${company.companyCode}/employees`);
+            if (response.ok) {
+                employees = await response.json();
+            } else {
+                throw new Error("HTTP " + response.status);
+            }
+        } catch (e) {
+            console.log("Falling back to mock employees:", e.message);
+            employees = mockEmployees[company.companyCode] || [];
+        }
+
+        dirEmployeeCount.textContent = `${employees.length} employee${employees.length === 1 ? '' : 's'}`;
         dirEmployeesListBody.innerHTML = '';
+
         if (employees.length === 0) {
-            dirEmployeesListBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px; color:var(--text-muted); font-size:13px;">No employee records registered in this company.</td></tr>`;
+            dirEmployeesListBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 30px; color:var(--text-muted); font-size:13px;">No employee records found for this company.</td></tr>`;
             return;
         }
 
         employees.forEach(emp => {
             const tr = document.createElement('tr');
+            const avatarSrc = emp.imageUrl || getAvatarUrl(emp.name || 'Employee');
+            const designation = emp.position || emp.designation || 'Employee';
+            const department = emp.department || '-';
             
             tr.innerHTML = `
                 <td>
                     <div class="dir-emp-name-cell">
-                        <img src="${emp.avatarUrl}" alt="${emp.name}" class="dir-emp-avatar">
-                        <strong>${emp.name}</strong>
+                        <img src="${avatarSrc}" alt="${emp.name}" class="dir-emp-avatar" onerror="this.src='${getAvatarUrl(emp.name || 'E')}'">
+                        <strong>${emp.name || 'Unknown'}</strong>
                     </div>
                 </td>
-                <td>${emp.email}</td>
+                <td>${emp.email || '-'}</td>
                 <td>
                     <div class="dir-emp-role-dept">
-                        <span class="role">${emp.designation}</span>
-                        <span class="dept">${emp.department}</span>
+                        <span class="role">${designation}</span>
+                        <span class="dept">${department}</span>
                     </div>
                 </td>
-                <td class="text-right">
-                    <button class="btn btn-secondary btn-sm btn-view-emp-profile" data-id="${emp.id}">
-                        <span class="material-symbols-outlined">badge</span> View Profile
+                <td class="text-right" style="display:flex; gap:6px; justify-content:flex-end;">
+                    <button class="btn btn-primary btn-sm btn-view-emp-profile" data-id="${emp.id}" style="display: flex; align-items: center; gap: 5px;">
+                        <span class="material-symbols-outlined">person</span> Profile
+                    </button>
+                    <button class="btn btn-secondary btn-sm btn-view-trail-emp" data-id="${emp.id}" data-code="${company.companyCode}" style="display: flex; align-items: center; gap: 5px;">
+                        <span class="material-symbols-outlined">route</span> Trail
                     </button>
                 </td>
             `;
@@ -732,25 +785,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 openEmployeeProfileModal(emp, company.companyCode);
             };
 
+            tr.querySelector('.btn-view-trail-emp').onclick = () => {
+                switchView('trail');
+                setTimeout(() => {
+                    const companySelect = document.getElementById('trail-company-select');
+                    if (companySelect) {
+                        companySelect.value = company.companyCode;
+                        companySelect.dispatchEvent(new Event('change'));
+                        setTimeout(() => {
+                            const empSelect = document.getElementById('trail-employee-select');
+                            if (empSelect) {
+                                empSelect.value = emp.id;
+                            }
+                            const dateInput = document.getElementById('trail-date-select');
+                            if (dateInput && !dateInput.value) {
+                                dateInput.value = new Date().toISOString().split('T')[0];
+                            }
+                        }, 1000);
+                    }
+                }, 300);
+            };
+
             dirEmployeesListBody.appendChild(tr);
         });
+
     }
 
     // 6. Action Handlers
-    function approveAdmin(id) {
+    async function approveAdmin(id) {
         const adminIndex = admins.findIndex(a => a.id === id);
         if (adminIndex > -1) {
             admins[adminIndex].status = 'APPROVED';
             saveState();
+
+            try {
+                await fetch(`http://192.168.10.136:9090/super-admin/companies/${id}/status?status=APPROVED`, {
+                    method: 'POST'
+                });
+            } catch (e) {
+                console.log("Could not update status on backend:", e.message);
+            }
             
             // Generate mock employees if they don't exist yet for this code
             const code = admins[adminIndex].companyCode;
             if (!mockEmployees[code]) {
+                const safeName = admins[adminIndex].name || "Admin";
+                const safeEmail = admins[adminIndex].email || "admin@company.com";
                 mockEmployees[code] = [
                     {
                         id: `emp_${code}_01`,
-                        name: `${admins[adminIndex].name.split(' ')[0]}'s Employee 1`,
-                        email: `staff1@${admins[adminIndex].email.split('@')[1]}`,
+                        name: `${safeName.split(' ')[0]}'s Employee 1`,
+                        email: `staff1@${safeEmail.split('@')[1]}`,
                         designation: "Software Engineer",
                         department: "Technology",
                         gender: "Male",
@@ -783,17 +868,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             renderDashboard();
-            showToast(`Approved admin ${admins[adminIndex].name}. Company Code ${admins[adminIndex].companyCode} activated.`, "success");
+            showToast(`Approved admin ${admins[adminIndex].name || 'Administrator'}. Company Code ${admins[adminIndex].companyCode} activated.`, "success");
         }
     }
 
-    function suspendAdmin(id) {
+    async function suspendAdmin(id) {
         const adminIndex = admins.findIndex(a => a.id === id);
         if (adminIndex > -1) {
             admins[adminIndex].status = 'SUSPENDED';
             saveState();
+
+            try {
+                await fetch(`http://192.168.10.136:9090/super-admin/companies/${id}/status?status=SUSPENDED`, {
+                    method: 'POST'
+                });
+            } catch (e) {
+                console.log("Could not update status on backend:", e.message);
+            }
+
             renderDashboard();
-            showToast(`Suspended account for admin ${admins[adminIndex].name}.`, "warning");
+            showToast(`Suspended account for admin ${admins[adminIndex].name || 'Administrator'}.`, "warning");
         }
     }
 
@@ -821,7 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activeEditAdminId = null;
     }
 
-    function saveFeatures() {
+    async function saveFeatures() {
         if (!activeEditAdminId) return;
 
         const adminIndex = admins.findIndex(a => a.id === activeEditAdminId);
@@ -835,54 +929,137 @@ document.addEventListener('DOMContentLoaded', () => {
 
             admins[adminIndex].allowedFeatures = updatedFeatures;
             saveState();
+
+            try {
+                await fetch(`http://192.168.10.136:9090/super-admin/companies/${activeEditAdminId}/features`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedFeatures)
+                });
+            } catch (e) {
+                console.log("Could not save features to backend:", e.message);
+            }
+
             renderDashboard();
             closeFeatureModal();
-            showToast(`Successfully updated feature permissions for ${admins[adminIndex].name}.`, "success");
+            showToast(`Successfully updated feature permissions for ${admins[adminIndex].name || 'Administrator'}.`, "success");
         }
     }
 
     // Employee Profile Folder Modal
-    function openEmployeeProfileModal(emp, companyCode) {
-        empModalAvatar.src = emp.avatarUrl;
-        empModalName.textContent = emp.name;
-        empModalDesignation.textContent = emp.designation;
-        empModalDeptBadge.textContent = emp.department;
+    async function openEmployeeProfileModal(emp, companyCode) {
+        // Show modal immediately with basic info while loading
+        const loadingText = 'Loading...';
+        const na = 'Not available';
+
+        const avatarSrc = emp.imageUrl || getAvatarUrl(emp.name || 'E');
+        empModalAvatar.src = avatarSrc;
+        empModalAvatar.onerror = () => { empModalAvatar.src = getAvatarUrl(emp.name || 'E'); };
+        empModalName.textContent = emp.name || 'Unknown';
+        empModalDesignation.textContent = loadingText;
+        empModalDeptBadge.textContent = loadingText;
         empModalCodeBadge.textContent = companyCode;
 
-        empModalGender.textContent = emp.gender;
-        empModalMarital.textContent = emp.maritalStatus;
-        empModalBlood.textContent = emp.bloodGroup;
-        empModalHandicapped.textContent = emp.physicallyChallenged;
-        empModalCurrentAddress.textContent = emp.currentAddress || "Not specified";
-        empModalPermanentAddress.textContent = emp.permanentAddress || "Not specified";
-
-        empModalFather.textContent = emp.fathersName || "Not specified";
-        empModalMother.textContent = emp.mothersName || "Not specified";
-        empModalEmergencyName.textContent = emp.emergencyName || "Not specified";
-        empModalEmergencyRelation.textContent = emp.emergencyRelation || "Not specified";
-        empModalEmergencyPhone.textContent = emp.emergencyNumber || "Not specified";
-
-        empModalBankName.textContent = emp.bankName || "Not specified";
-        empModalBankHolder.textContent = emp.accountHolder || "Not specified";
-        empModalBankNumber.textContent = emp.accountNumber || "Not specified";
-        empModalBankIfsc.textContent = emp.ifscCode || "Not specified";
-        empModalBankUpi.textContent = emp.upiId || "Not specified";
-
-        empModalUan.textContent = emp.uan || "Not specified";
-        empModalPan.textContent = emp.pan || "Not specified";
-        empModalPf.textContent = emp.pfNumber || "Not specified";
-        empModalPfDate.textContent = emp.pfJoining || "Not specified";
-        empModalEsi.textContent = emp.esiNumber || "Not specified";
-        empModalEsiDate.textContent = emp.esiJoining || "Not specified";
-        empModalEps.textContent = emp.epsNumber || "Not specified";
-        empModalEpsExit.textContent = emp.epsExit || "Not specified";
+        // Clear all fields to loading state
+        [empModalGender, empModalMarital, empModalBlood, empModalHandicapped,
+         empModalCurrentAddress, empModalPermanentAddress, empModalFather, empModalMother,
+         empModalEmergencyName, empModalEmergencyRelation, empModalEmergencyPhone,
+         empModalBankName, empModalBankHolder, empModalBankNumber, empModalBankIfsc, empModalBankUpi,
+         empModalUan, empModalPan, empModalPf, empModalPfDate, empModalEsi, empModalEsiDate,
+         empModalEps, empModalEpsExit].forEach(el => { if (el) el.textContent = loadingText; });
 
         employeeModal.classList.remove('hidden');
+
+        // Fetch full profile from backend
+        let profile = null;
+        try {
+            const response = await fetch(`http://192.168.10.136:9090/users/${emp.id}`);
+            if (response.ok) {
+                profile = await response.json();
+            } else {
+                throw new Error('HTTP ' + response.status);
+            }
+        } catch (e) {
+            console.log('Could not fetch full profile from backend:', e.message);
+        }
+
+        // Use backend data if available, otherwise use what we have from list + mark rest N/A
+        const user = profile || emp;
+
+        const positionLabel = user.position
+            ? String(user.position).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+            : (user.designation || na);
+        const deptLabel = user.department
+            ? String(user.department).replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+            : (user.dept || na);
+        const roleLabel = user.role
+            ? String(user.role).replace('ROLE_', '').replace(/_/g, ' ')
+            : na;
+
+        // Update avatar if backend has imageUrl
+        if (user.imageUrl) {
+            empModalAvatar.src = user.imageUrl;
+        }
+        empModalName.textContent = user.name || 'Unknown';
+        empModalDesignation.textContent = `${positionLabel} · ${roleLabel}`;
+        empModalDeptBadge.textContent = deptLabel;
+        empModalCodeBadge.textContent = user.companyCode || companyCode;
+
+        // Personal info — fields the backend UserResponseDto exposes
+        const set = (el, val) => { if (el) el.textContent = val || na; };
+        set(empModalGender, user.gender);
+        set(empModalMarital, na); // not in UserResponseDto
+        set(empModalBlood, na);   // not in UserResponseDto
+        set(empModalHandicapped, na);
+        set(empModalCurrentAddress, na);
+        set(empModalPermanentAddress, na);
+
+        // Family / emergency — not stored in backend yet
+        set(empModalFather, na);
+        set(empModalMother, na);
+        set(empModalEmergencyName, na);
+        set(empModalEmergencyRelation, na);
+        set(empModalEmergencyPhone, user.phone || na);
+
+        // Bank details — not in backend yet
+        set(empModalBankName, na);
+        set(empModalBankHolder, na);
+        set(empModalBankNumber, na);
+        set(empModalBankIfsc, na);
+        set(empModalBankUpi, na);
+
+        // Statutory — not in backend yet
+        set(empModalUan, na);
+        set(empModalPan, na);
+        set(empModalPf, na);
+        set(empModalPfDate, na);
+        set(empModalEsi, na);
+        set(empModalEsiDate, na);
+        set(empModalEps, na);
+        set(empModalEpsExit, na);
+
+        // Show extra info we DO have — email and phone in the subtitle
+        const subtitleEl = document.getElementById('emp-modal-subtitle');
+        if (subtitleEl) {
+            subtitleEl.innerHTML = `
+                <span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">mail</span>
+                    ${user.email || na}
+                </span>
+                ${user.phone ? `<span style="display:inline-flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">phone</span>
+                    ${user.phone}
+                </span>` : ''}
+            `;
+        }
     }
 
     function closeEmployeeModal() {
         employeeModal.classList.add('hidden');
     }
+
 
     // Generate Mock Registration
     function generateNewRegistration() {
@@ -988,6 +1165,388 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add Mock registration request
         btnAddMockAdmin.addEventListener('click', generateNewRegistration);
+
+        // Location Trail Select changes
+        const trailCompanySelect = document.getElementById('trail-company-select');
+        if (trailCompanySelect) {
+            trailCompanySelect.addEventListener('change', (e) => {
+                loadTrailEmployees(e.target.value);
+            });
+        }
+
+        const btnLoadTrail = document.getElementById('btn-load-trail');
+        if (btnLoadTrail) {
+            btnLoadTrail.addEventListener('click', () => {
+                if (liveTrackingActive) stopLiveTracking();
+                loadAndRenderTrail();
+            });
+        }
+
+        const btnLiveTrack = document.getElementById('btn-live-track');
+        if (btnLiveTrack) {
+            btnLiveTrack.addEventListener('click', () => {
+                if (liveTrackingActive) {
+                    stopLiveTracking();
+                } else {
+                    startLiveTracking();
+                }
+            });
+        }
+
+        // Auto-stop live tracking when employee selection changes
+        const trailEmpSelect = document.getElementById('trail-employee-select');
+        if (trailEmpSelect) {
+            trailEmpSelect.addEventListener('change', () => {
+                if (liveTrackingActive) stopLiveTracking();
+            });
+        }
+    }
+
+
+    function populateTrailCompanies() {
+        const select = document.getElementById('trail-company-select');
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Choose Company --</option>';
+        
+        const companies = admins.filter(a => a.status === 'APPROVED');
+        companies.forEach(company => {
+            const opt = document.createElement('option');
+            opt.value = company.companyCode;
+            opt.textContent = `${company.companyName} (${company.companyCode})`;
+            select.appendChild(opt);
+        });
+    }
+
+    async function loadTrailEmployees(companyCode) {
+        const empSelect = document.getElementById('trail-employee-select');
+        if (!empSelect) return;
+        empSelect.innerHTML = '<option value="">-- Choose Employee --</option>';
+        empSelect.disabled = true;
+
+        if (!companyCode) return;
+
+        let employees = [];
+        try {
+            const response = await fetch(`http://192.168.10.136:9090/companies/code/${companyCode}/employees`);
+            if (response.ok) {
+                employees = await response.json();
+            } else {
+                throw new Error("Backend response error");
+            }
+        } catch (e) {
+            console.log("Falling back to mock employees due to:", e.message);
+            employees = mockEmployees[companyCode] || [];
+        }
+
+        if (employees.length > 0) {
+            employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id;
+                opt.textContent = emp.name;
+                empSelect.appendChild(opt);
+            });
+            empSelect.disabled = false;
+        } else {
+            showToast("No active employee directory found for this company.", "warning");
+        }
+    }
+
+    async function loadAndRenderTrail() {
+        const companyCode = document.getElementById('trail-company-select').value;
+        const employeeId = document.getElementById('trail-employee-select').value;
+        const date = document.getElementById('trail-date-select').value;
+
+        if (!companyCode || !employeeId || !date) {
+            showToast("Please select company, employee, and date first.", "warning");
+            return;
+        }
+
+        let trailPoints = [];
+        try {
+            const response = await fetch(`http://192.168.10.136:9090/attendances/trail/employee/${employeeId}?date=${date}`);
+            if (response.ok) {
+                trailPoints = await response.json();
+            } else {
+                throw new Error("Backend query failed");
+            }
+        } catch (e) {
+            console.log("Generating mock trail points due to:", e.message);
+            trailPoints = generateMockTrailPoints();
+        }
+
+        renderTrailOnMap(trailPoints);
+    }
+
+    function generateMockTrailPoints() {
+        const now = new Date();
+        const points = [];
+        const startLat = 12.9716;
+        const startLng = 77.5946;
+        
+        for (let i = 0; i < 6; i++) {
+            const time = new Date(now.getTime() - (6 - i) * 1800 * 1000);
+            points.push({
+                latitude: startLat + (i * 0.0015) - (Math.random() * 0.0005),
+                longitude: startLng + (i * 0.0012) + (Math.random() * 0.0005),
+                recordedAt: time.toISOString()
+            });
+        }
+        return points;
+    }
+
+    // ========== LIVE TRACKING FUNCTIONS ==========
+
+    async function startLiveTracking() {
+        const employeeId = document.getElementById('trail-employee-select').value;
+        const companyCode = document.getElementById('trail-company-select').value;
+
+        if (!companyCode || !employeeId) {
+            showToast('Please select a company and employee first.', 'warning');
+            return;
+        }
+
+        // Fetch employee details for the sidebar panel
+        let empData = { name: 'Employee', imageUrl: '' };
+        try {
+            const r = await fetch(`http://192.168.10.136:9090/users/${employeeId}`);
+            if (r.ok) empData = await r.json();
+        } catch(e) { console.log('Could not prefetch employee data', e); }
+        liveEmployeeData = empData;
+
+        // Load today's historical trail first so the path context is visible
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('trail-date-select').value = today;
+        let historicalPoints = [];
+        try {
+            const r = await fetch(`http://192.168.10.136:9090/attendances/trail/employee/${employeeId}?date=${today}`);
+            if (r.ok) historicalPoints = await r.json();
+        } catch(e) { console.log('Could not load historical trail', e); }
+
+        // Render existing trail before going live
+        if (historicalPoints.length > 0) {
+            renderTrailOnMap(historicalPoints);
+            livePolylinePoints = historicalPoints.map(p => [p.latitude, p.longitude]);
+        } else {
+            // Initialise the map even with no historical data
+            const placeholder = document.getElementById('map-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+            if (!trailMap) {
+                trailMap = L.map('trail-map').setView([28.6139, 77.2090], 13);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap &copy; CARTO',
+                    subdomains: 'abcd', maxZoom: 20
+                }).addTo(trailMap);
+            }
+            livePolylinePoints = [];
+        }
+
+        liveEmployeeId = employeeId;
+        livePointCount = historicalPoints.length;
+        liveTrackingActive = true;
+
+        // Update UI
+        const btnLive = document.getElementById('btn-live-track');
+        btnLive.classList.add('active');
+        btnLive.innerHTML = '<span class="material-symbols-outlined">sensors_off</span> Stop Live Tracking';
+
+        document.getElementById('live-status-badge').classList.remove('hidden');
+
+        const panel = document.getElementById('live-employee-panel');
+        panel.classList.remove('hidden');
+        document.getElementById('live-emp-name').textContent = empData.name || 'Employee';
+        document.getElementById('live-emp-avatar').src = empData.imageUrl || getAvatarUrl(empData.name || 'E');
+        document.getElementById('live-points-count').textContent = livePointCount;
+        document.getElementById('live-last-update').textContent = historicalPoints.length > 0
+            ? new Date(historicalPoints[historicalPoints.length - 1].recordedAt).toLocaleTimeString()
+            : 'Waiting...';
+
+        // Connect WebSocket via SockJS + STOMP
+        const socket = new SockJS('http://192.168.10.136:9090/chat-websocket');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Silence STOMP debug logs
+
+        stompClient.connect({}, () => {
+            liveSubscription = stompClient.subscribe(`/topic/location/${employeeId}`, (message) => {
+                const point = JSON.parse(message.body);
+                appendLivePoint(point);
+            });
+            showToast(`🔴 Live tracking started for ${empData.name || 'employee'}.`, 'success');
+        }, (error) => {
+            console.error('STOMP connection error:', error);
+            showToast('Could not connect to live tracking server.', 'danger');
+            stopLiveTracking();
+        });
+    }
+
+    function stopLiveTracking() {
+        liveTrackingActive = false;
+
+        // Unsubscribe and disconnect STOMP
+        try {
+            if (liveSubscription) liveSubscription.unsubscribe();
+            if (stompClient && stompClient.connected) stompClient.disconnect();
+        } catch(e) { console.log('STOMP disconnect error', e); }
+
+        stompClient = null;
+        liveSubscription = null;
+        liveEmployeeId = null;
+        liveEmployeeData = null;
+        livePolylinePoints = [];
+        livePointCount = 0;
+
+        // Remove live marker from map
+        if (liveMarker) {
+            trailMap && trailMap.removeLayer(liveMarker);
+            liveMarker = null;
+        }
+
+        // Reset UI
+        const btnLive = document.getElementById('btn-live-track');
+        if (btnLive) {
+            btnLive.classList.remove('active');
+            btnLive.innerHTML = '<span class="material-symbols-outlined">sensors</span> Start Live Tracking';
+        }
+        document.getElementById('live-status-badge').classList.add('hidden');
+        document.getElementById('live-employee-panel').classList.add('hidden');
+
+        showToast('Live tracking stopped.', 'info');
+    }
+
+    function appendLivePoint(point) {
+        if (!liveTrackingActive || !trailMap) return;
+
+        const lat = point.latitude;
+        const lng = point.longitude;
+        const latlng = [lat, lng];
+
+        livePolylinePoints.push(latlng);
+        livePointCount++;
+
+        // Extend or create the polyline
+        if (trailPolyline) {
+            trailPolyline.setLatLngs(livePolylinePoints);
+        } else {
+            trailPolyline = L.polyline(livePolylinePoints, {
+                color: '#6366f1', weight: 5, opacity: 0.85
+            }).addTo(trailMap);
+        }
+
+        // Move / create the pulsing live marker
+        const liveIcon = L.divIcon({
+            html: '<div class="live-pulse-marker"></div>',
+            className: '',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        if (liveMarker) {
+            liveMarker.setLatLng(latlng);
+        } else {
+            liveMarker = L.marker(latlng, { icon: liveIcon, zIndexOffset: 1000 })
+                .bindPopup('<strong>Live Position</strong>')
+                .addTo(trailMap);
+        }
+
+        // Pan map smoothly to new position
+        trailMap.panTo(latlng, { animate: true, duration: 0.8 });
+
+        // Update sidebar stats
+        document.getElementById('live-points-count').textContent = livePointCount;
+        document.getElementById('live-last-update').textContent = new Date(point.recordedAt).toLocaleTimeString();
+        document.getElementById('live-current-coords').textContent =
+            `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+        // Update session summary total points
+        const summaryPts = document.getElementById('trail-summary-points');
+        if (summaryPts) summaryPts.textContent = livePointCount;
+        document.getElementById('trail-info-panel').classList.remove('hidden');
+    }
+
+    function renderTrailOnMap(points) {
+
+        const placeholder = document.getElementById('map-placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        if (points.length === 0) {
+            showToast("No location trail logs found for this date.", "warning");
+            if (placeholder) placeholder.style.display = 'flex';
+            document.getElementById('trail-info-panel').classList.add('hidden');
+            return;
+        }
+
+        const startPt = points[0];
+        const endPt = points[points.length - 1];
+
+        // Initialize Map if not done
+        if (!trailMap) {
+            trailMap = L.map('trail-map').setView([startPt.latitude, startPt.longitude], 14);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(trailMap);
+        }
+
+        // Clear existing markers and lines
+        if (trailPolyline) {
+            trailMap.removeLayer(trailPolyline);
+        }
+        trailMarkers.forEach(m => trailMap.removeLayer(m));
+        trailMarkers = [];
+
+        // Parse latlngs
+        const latlngs = points.map(pt => [pt.latitude, pt.longitude]);
+
+        // Draw Polyline
+        trailPolyline = L.polyline(latlngs, {color: '#6366f1', weight: 5, opacity: 0.85}).addTo(trailMap);
+
+        // Check-In green marker
+        const greenIcon = L.divIcon({
+            html: '<span class="material-symbols-outlined" style="color: #10b981; font-size: 32px; font-weight: bold;">location_on</span>',
+            className: 'custom-div-icon',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        });
+        const startMarker = L.marker([startPt.latitude, startPt.longitude], {icon: greenIcon})
+            .bindPopup(`<strong>Check-In</strong><br>Time: ${new Date(startPt.recordedAt).toLocaleTimeString()}`)
+            .addTo(trailMap);
+        trailMarkers.push(startMarker);
+
+        // Check-Out red marker
+        const redIcon = L.divIcon({
+            html: '<span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px; font-weight: bold;">location_on</span>',
+            className: 'custom-div-icon',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        });
+        const endMarker = L.marker([endPt.latitude, endPt.longitude], {icon: redIcon})
+            .bindPopup(`<strong>Check-Out</strong><br>Time: ${new Date(endPt.recordedAt).toLocaleTimeString()}`)
+            .addTo(trailMap);
+        trailMarkers.push(endMarker);
+
+        // Intermediate circle dots
+        for (let i = 1; i < points.length - 1; i++) {
+            const pt = points[i];
+            const circle = L.circleMarker([pt.latitude, pt.longitude], {
+                radius: 6,
+                color: '#6366f1',
+                fillColor: '#1e1b4b',
+                fillOpacity: 1,
+                weight: 2
+            }).bindPopup(`Logged at: ${new Date(pt.recordedAt).toLocaleTimeString()}`).addTo(trailMap);
+            trailMarkers.push(circle);
+        }
+
+        // Auto zoom and center trail boundaries
+        trailMap.fitBounds(trailPolyline.getBounds(), {padding: [50, 50]});
+
+        // Display Summary Card details
+        document.getElementById('trail-info-panel').classList.remove('hidden');
+        document.getElementById('trail-summary-checkin').textContent = new Date(startPt.recordedAt).toLocaleTimeString();
+        document.getElementById('trail-summary-checkout').textContent = points.length > 1 ? new Date(endPt.recordedAt).toLocaleTimeString() : "Still active";
+        document.getElementById('trail-summary-points').textContent = points.length;
+
+        showToast(`Loaded location trail with ${points.length} points.`, "success");
     }
 
     // 8. Helper Functions
@@ -1003,7 +1562,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getAvatarUrl(name) {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&bold=true&size=128`;
+        const safeName = name || "System Admin";
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(safeName)}&background=6366f1&color=fff&bold=true&size=128`;
     }
 
     // Toast System

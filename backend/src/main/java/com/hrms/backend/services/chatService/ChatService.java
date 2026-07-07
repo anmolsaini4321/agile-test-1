@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,9 +33,6 @@ public class ChatService {
 
     @Autowired
     private ModelMapper mapper;
-
-    @Autowired
-    private MongoTemplate mongoTemplate;
 
     public List<ChatMessageResponseDto> getHistory(
             String userId,
@@ -133,7 +129,7 @@ public class ChatService {
 
 
     public void markMessagesAsSeen(String chatId, String userId) {
-        List<ChatMessage> chatMessages = messageRepository.findByChatIdAndMessageStatus(chatId, "DELIVERED");
+        List<ChatMessage> chatMessages = messageRepository.findByChatIdAndMessageStatus(chatId, MessageStatus.DELIVERED);
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat does not exist"));
 

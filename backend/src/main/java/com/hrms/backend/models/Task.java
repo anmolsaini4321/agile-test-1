@@ -2,10 +2,8 @@ package com.hrms.backend.models;
 
 import com.hrms.backend.models.enums.Priority;
 import com.hrms.backend.models.enums.Status;
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -15,13 +13,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@Document(collection = "tasks")
+@Entity
+@Table(name = "tasks")
 public class Task {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Field(write = Field.Write.ALWAYS)
     private String imageUrl;
 
     private String companyCode;
@@ -34,12 +33,18 @@ public class Task {
 
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
     private Priority priority;
 
+    @Enumerated(EnumType.STRING)
     private Status status = Status.NOT_STARTED; //By default NotStarted
 
+    @Column(name = "assignee_id")
     private String assignee; //HR id
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "task_employees", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "employee_id")
     private Set<String> employees;
 
 }

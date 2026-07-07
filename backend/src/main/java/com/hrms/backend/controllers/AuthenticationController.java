@@ -160,7 +160,7 @@ public class AuthenticationController {
                 .imageUrl((String) payload.get("picture"))
                 .role(Role.valueOf(request.getRole())) // Either ROLE_HR or ROLE_USER
                 .isGoogleUser(true)
-                .createdAt(LocalDateTime.now().toString())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         if (newUser.getRole().equals(Role.ROLE_HR)) {
@@ -169,18 +169,23 @@ public class AuthenticationController {
             while (companyRepository.findByCompanyCode(companyCode).isPresent()) {
                 companyCode = CodeGenerator.generateBase64Code();
             }
-            newUser.setCompanyCode(companyCode);
+            newUser.setCompanyCode(null);
 
-            // Save HR user
+            // Save HR user first
             User savedUser = userRepository.save(newUser);
 
             // Create and save company
             Company company = Company.builder()
                     .companyCode(companyCode)
+                    .companyName(savedUser.getName() + "'s Company")
                     .hr(savedUser.getId())
-                    .createdDate(LocalDateTime.now().toString())
+                    .createdDate(LocalDateTime.now())
                     .build();
             companyRepository.save(company);
+
+            // Update user with company code
+            savedUser.setCompanyCode(companyCode);
+            savedUser = userRepository.save(savedUser);
 
             // Generate JWT
             String jwt = jwtHelper.generateToken(savedUser, savedUser.getRole().name());

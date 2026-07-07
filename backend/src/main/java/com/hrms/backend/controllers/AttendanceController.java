@@ -4,6 +4,7 @@ import com.hrms.backend.dtos.entityDtos.Attendance.AttendanceRequestDto;
 import com.hrms.backend.dtos.entityDtos.Attendance.AttendanceResponseDto;
 import com.hrms.backend.security.JwtHelper;
 import com.hrms.backend.services.attendanceService.AttendanceServiceInterface;
+import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +51,33 @@ public class AttendanceController {
     ) {
         String hrId = jwtHelper.getUserIdFromToken(authHeader.substring(7));
         return attendanceService.getCompanyAttendanceByDate(hrId, date);
+    }
+
+    @PostMapping("/trail")
+    public void recordLocationTrail(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody LocationTrailRequest request
+    ) {
+        String userId = jwtHelper.getUserIdFromToken(authHeader.substring(7));
+        attendanceService.recordLocationTrail(userId, request.getAttendanceId(), request.getLatitude(), request.getLongitude());
+    }
+
+    @GetMapping("/trail/employee/{employeeId}")
+    public List<com.hrms.backend.models.EmployeeLocationTrail> getLocationTrail(
+            @PathVariable String employeeId,
+            @RequestParam(name = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return attendanceService.getLocationTrailByEmployeeAndDate(employeeId, date);
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LocationTrailRequest {
+        private String attendanceId;
+        private Double latitude;
+        private Double longitude;
     }
 }
 

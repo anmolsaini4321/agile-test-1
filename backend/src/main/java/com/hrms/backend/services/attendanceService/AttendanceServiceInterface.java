@@ -16,4 +16,7 @@ public interface AttendanceServiceInterface  {
 
     List<AttendanceResponseDto> getEmployeeAttendanceHistory(String userId);
     List<AttendanceResponseDto> getCompanyAttendanceByDate(String hrId, Optional<LocalDate> optionalDate);
+    
+    void recordLocationTrail(String userId, String attendanceId, Double latitude, Double longitude);
+    List<com.hrms.backend.models.EmployeeLocationTrail> getLocationTrailByEmployeeAndDate(String employeeId, LocalDate date);
 }

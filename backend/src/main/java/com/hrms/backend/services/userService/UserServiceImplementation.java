@@ -48,21 +48,25 @@ public class UserServiceImplementation implements UserServiceInterface {
             throw new BadApiRequestException("User with this email already exists!");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setCreatedAt(LocalDateTime.now().toString());
+        user.setCreatedAt(LocalDateTime.now());
 
         if (user.getRole() == Role.ROLE_HR) {
             String companyCode = CodeGenerator.generateBase64Code();
             while (companyRepository.findByCompanyCode(companyCode).isPresent()) {
                 companyCode = CodeGenerator.generateBase64Code();
             }
-            user.setCompanyCode(companyCode);
-
+            user.setCompanyCode(null);
             User savedUser = userRepository.save(user);
+
             Company company = new Company();
             company.setCompanyCode(companyCode);
+            company.setCompanyName(savedUser.getName() + "'s Company");
             company.setHr(savedUser.getId());
-            company.setCreatedDate(LocalDateTime.now().toString());
+            company.setCreatedDate(LocalDateTime.now());
             companyRepository.save(company);
+
+            savedUser.setCompanyCode(companyCode);
+            savedUser = userRepository.save(savedUser);
 
             return modelMapper.map(savedUser, UserResponseDto.class);
 
