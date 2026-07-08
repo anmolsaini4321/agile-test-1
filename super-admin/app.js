@@ -516,8 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Search query match
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
-                const matchesName = admin.name.toLowerCase().includes(query);
-                const matchesEmail = admin.email.toLowerCase().includes(query);
+                const name = (admin.adminName || admin.name || '').toLowerCase();
+                const email = (admin.adminEmail || admin.email || '').toLowerCase();
+                const matchesName = name.includes(query);
+                const matchesEmail = email.includes(query);
                 const matchesCompany = admin.companyName.toLowerCase().includes(query) || admin.companyCode.toLowerCase().includes(query);
                 return matchesName || matchesEmail || matchesCompany;
             }
@@ -539,11 +541,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             
             // Info Column HTML
+            const _name = admin.adminName || admin.name || 'Unknown';
             const infoHTML = `
                 <div class="admin-info-cell">
-                    <img class="admin-avatar" src="${getAvatarUrl(admin.name)}" alt="${admin.name}">
+                    <img class="admin-avatar" src="${getAvatarUrl(_name)}" alt="${_name}">
                     <div class="admin-name-wrapper">
-                        <h4>${admin.name}</h4>
+                        <h4>${_name}</h4>
                         <span class="reg-date">Joined: ${admin.createdAt}</span>
                     </div>
                 </div>
@@ -612,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td>${infoHTML}</td>
-                <td>${admin.email}</td>
+                <td>${admin.adminEmail || admin.email || '-'}</td>
                 <td>
                     <div class="company-cell">
                         <div>${admin.companyName}</div>
@@ -949,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             renderDashboard();
-            showToast(`Approved admin ${admins[adminIndex].name || 'Administrator'}. Company Code ${admins[adminIndex].companyCode} activated.`, "success");
+            showToast(`Approved admin ${admins[adminIndex].adminName || admins[adminIndex].name || 'Administrator'}. Company Code ${admins[adminIndex].companyCode} activated.`, "success");
         }
     }
 
@@ -968,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             renderDashboard();
-            showToast(`Suspended account for admin ${admins[adminIndex].name || 'Administrator'}.`, "warning");
+            showToast(`Suspended account for admin ${admins[adminIndex].adminName || admins[adminIndex].name || 'Administrator'}.`, "warning");
         }
     }
 
@@ -978,8 +981,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!admin) return;
 
         activeEditAdminId = id;
-        modalAdminName.textContent = admin.name;
-        modalAdminEmail.textContent = admin.email;
+        modalAdminName.textContent = admin.adminName || admin.name || 'Unknown';
+        modalAdminEmail.textContent = admin.adminEmail || admin.email || 'N/A';
         modalAdminCompany.textContent = `${admin.companyName} (Code: ${admin.companyCode})`;
 
         // Populate checkboxes
@@ -1025,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderDashboard();
             closeFeatureModal();
-            showToast(`Successfully updated feature permissions for ${admins[adminIndex].name || 'Administrator'}.`, "success");
+            showToast(`Successfully updated feature permissions for ${admins[adminIndex].adminName || admins[adminIndex].name || 'Administrator'}.`, "success");
         }
     }
 

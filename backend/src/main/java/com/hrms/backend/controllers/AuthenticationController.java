@@ -83,6 +83,8 @@ public class AuthenticationController {
                         throw new BadApiRequestException("Your registration request is pending approval from the Super Admin.");
                     } else if ("REJECTED".equals(status)) {
                         throw new BadApiRequestException("Your registration request has been rejected by the Super Admin.");
+                    } else if ("SUSPENDED".equals(status)) {
+                        throw new BadApiRequestException("Your company account has been suspended. Please contact the Super Admin.");
                     }
                 }
             }
@@ -140,6 +142,8 @@ public class AuthenticationController {
                         throw new BadApiRequestException("Your registration request is pending approval from the Super Admin.");
                     } else if ("REJECTED".equals(status)) {
                         throw new BadApiRequestException("Your registration request has been rejected by the Super Admin.");
+                    } else if ("SUSPENDED".equals(status)) {
+                        throw new BadApiRequestException("Your company account has been suspended. Please contact the Super Admin.");
                     }
                 }
             }
