@@ -12,6 +12,8 @@ public class UserInfo {
     private String name;
     private String email;
     private String imageUrl;
+    private String position;   // e.g. "SOFTWARE_ENGINEER" → displayed by frontend
+    private String department; // e.g. "ENGINEERING"
 }
 
 

@@ -42,6 +42,8 @@ public class CompanyServiceImpl implements CompanyServiceInterface {
                         .name(user.getName())
                         .email(user.getEmail())
                         .imageUrl(user.getImageUrl())
+                        .position(user.getPosition() != null ? user.getPosition().name() : null)
+                        .department(user.getDepartment() != null ? user.getDepartment().name() : null)
                         .build())
                 .toList();
 
@@ -63,6 +65,8 @@ public class CompanyServiceImpl implements CompanyServiceInterface {
                         .name(user.getName())
                         .email(user.getEmail())
                         .imageUrl(user.getImageUrl())
+                        .position(user.getPosition() != null ? user.getPosition().name() : null)
+                        .department(user.getDepartment() != null ? user.getDepartment().name() : null)
                         .build())
                 .toList();
 
@@ -128,11 +132,14 @@ public class CompanyServiceImpl implements CompanyServiceInterface {
         String companyCode = user.getCompanyCode();
         companyRepository.findByCompanyCode(companyCode).orElseThrow(()-> new ResourceNotFoundException("Company does not exist!!"));
         List<User> allUsers = userRepository.findAllByCompanyCode(companyCode);
-        return allUsers.stream().map(user1->
-                UserInfo.builder().name(user1.getName())
+        return allUsers.stream().map(user1 ->
+                UserInfo.builder()
+                        .name(user1.getName())
                         .id(user1.getId())
                         .email(user1.getEmail())
                         .imageUrl(user1.getImageUrl())
+                        .position(user1.getPosition() != null ? user1.getPosition().name() : null)
+                        .department(user1.getDepartment() != null ? user1.getDepartment().name() : null)
                         .build()
         ).toList();
      }
@@ -148,6 +155,8 @@ public class CompanyServiceImpl implements CompanyServiceInterface {
                         .name(user.getName())
                         .email(user.getEmail())
                         .imageUrl(user.getImageUrl())
+                        .position(user.getPosition() != null ? user.getPosition().name() : null)
+                        .department(user.getDepartment() != null ? user.getDepartment().name() : null)
                         .build()
         ).toList();
     }

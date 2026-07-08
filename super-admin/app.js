@@ -3,9 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:9090' 
-        : 'https://kaampe-demo-backend.onrender.com';
+    const API_BASE_URL = 'https://agile-test-1-backend-second-branch.onrender.com';
 
     // Initial Mock Data (used if LocalStorage is empty)
     const initialAdmins = [
@@ -433,13 +431,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("HTTP error: " + response.status);
             }
         } catch (e) {
-            console.log("Falling back to local storage due to:", e.message);
+            console.warn("Backend unreachable, falling back to local storage:", e.message);
             const savedAdmins = localStorage.getItem('crewHQ_admins');
             if (savedAdmins) {
                 admins = JSON.parse(savedAdmins);
+                showToast("⚠️ Backend offline — showing cached data. Changes won't persist.", "warning");
             } else {
                 admins = initialAdmins;
                 saveState();
+                showToast("⚠️ Backend offline — showing demo data. Start the backend server.", "warning");
             }
         }
 
@@ -1084,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', () => {
             empModalAvatar.src = user.imageUrl;
         }
         empModalName.textContent = user.name || 'Unknown';
-        empModalDesignation.textContent = `${positionLabel} Â· ${roleLabel}`;
+        empModalDesignation.textContent = `${positionLabel} · ${roleLabel}`;
         empModalDeptBadge.textContent = deptLabel;
         empModalCodeBadge.textContent = user.companyCode || companyCode;        // Personal info
         const set = (el, val) => { if (el) el.textContent = val || na; };
@@ -1119,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         set(empModalEps, user.epsNumber);
         set(empModalEpsExit, user.epsExit);
 
-        // Show extra info we DO have â€” email and phone in the subtitle
+        // Show extra info we DO have — email and phone in the subtitle
         const subtitleEl = document.getElementById('emp-modal-subtitle');
         if (subtitleEl) {
             subtitleEl.innerHTML = `
@@ -1509,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const point = JSON.parse(message.body);
                 appendLivePoint(point);
             });
-            showToast(`ðŸ”´ Live tracking started for ${empData.name || 'employee'}.`, 'success');
+            showToast('🔴 Live tracking started for ' + (empData.name || 'employee') + '.', 'success');
         }, (error) => {
             console.error('STOMP connection error:', error);
             showToast('Could not connect to live tracking server.', 'danger');
@@ -1897,8 +1897,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminUser = admins.find(a => a.companyCode === companyCode);
         if (adminUser) {
             const opt = document.createElement('option');
-            opt.value = adminUser.id;
-            opt.textContent = `${adminUser.name} (Admin)`;
+            // adminId is the HR user's own DB ID; .id is the company's DB ID — must use adminId here
+            opt.value = adminUser.adminId || adminUser.id;
+            opt.textContent = `${adminUser.adminName || adminUser.name} (Admin)`;
             userSelect.appendChild(opt);
         }
 

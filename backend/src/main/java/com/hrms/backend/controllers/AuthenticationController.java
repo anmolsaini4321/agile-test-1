@@ -77,7 +77,8 @@ public class AuthenticationController {
             if (companyCode != null) {
                 Optional<Company> companyOpt = companyRepository.findByCompanyCode(companyCode);
                 if (companyOpt.isPresent()) {
-                    String status = SuperAdminController.getCompanyStatus(companyOpt.get().getId());
+                    String status = companyOpt.get().getStatus() != null
+                            ? companyOpt.get().getStatus() : "PENDING";
                     if ("PENDING".equals(status)) {
                         throw new BadApiRequestException("Your registration request is pending approval from the Super Admin.");
                     } else if ("REJECTED".equals(status)) {
@@ -133,7 +134,8 @@ public class AuthenticationController {
             if (companyCode != null) {
                 Optional<Company> companyOpt = companyRepository.findByCompanyCode(companyCode);
                 if (companyOpt.isPresent()) {
-                    String status = SuperAdminController.getCompanyStatus(companyOpt.get().getId());
+                    String status = companyOpt.get().getStatus() != null
+                            ? companyOpt.get().getStatus() : "PENDING";
                     if ("PENDING".equals(status)) {
                         throw new BadApiRequestException("Your registration request is pending approval from the Super Admin.");
                     } else if ("REJECTED".equals(status)) {

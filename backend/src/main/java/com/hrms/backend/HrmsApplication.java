@@ -45,7 +45,10 @@ public class HrmsApplication implements CommandLineRunner {
 				"ALTER TABLE chats ALTER COLUMN last_message_type TYPE VARCHAR(50)",
 				"ALTER TABLE chats ALTER COLUMN last_message_status TYPE VARCHAR(50)",
 				"ALTER TABLE chat_messages ALTER COLUMN message_type TYPE VARCHAR(50)",
-				"ALTER TABLE chat_messages ALTER COLUMN message_status TYPE VARCHAR(50)"
+				"ALTER TABLE chat_messages ALTER COLUMN message_status TYPE VARCHAR(50)",
+				// Persist company approval status and feature flags to survive restarts
+				"ALTER TABLE companies ADD COLUMN IF NOT EXISTS status VARCHAR(50)",
+				"ALTER TABLE companies ADD COLUMN IF NOT EXISTS allowed_features TEXT"
 		};
 		for (String cmd : alterCommands) {
 			try {
@@ -53,6 +56,12 @@ public class HrmsApplication implements CommandLineRunner {
 			} catch (Exception e) {
 				// Ignore if table/column doesn't exist or already altered
 			}
+		}
+		// Set default PENDING status for any existing companies that have no status yet
+		try {
+			jdbcTemplate.execute("UPDATE companies SET status = 'PENDING' WHERE status IS NULL");
+		} catch (Exception e) {
+			// Ignore
 		}
 
 		try {

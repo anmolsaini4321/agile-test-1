@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/super-admin")
@@ -28,24 +27,14 @@ public class SuperAdminController {
     @Autowired
     private com.hrms.backend.repositories.AttendanceRepository attendanceRepository;
 
-    // In-memory cache for status and features since database schema ddl-auto=none
-    private static final Map<String, String> companyStatusMap = new ConcurrentHashMap<>();
-    private static final Map<String, Set<String>> companyFeaturesMap = new ConcurrentHashMap<>();
-
-    public static String getCompanyStatus(String companyId) {
-        return companyStatusMap.getOrDefault(companyId, "PENDING");
-    }
-
     @GetMapping("/companies")
     public ResponseEntity<List<SuperAdminCompanyDto>> getAllCompanies() {
         List<Company> companies = companyRepository.findAll();
         List<SuperAdminCompanyDto> dtos = new ArrayList<>();
 
         for (Company company : companies) {
-            String status = companyStatusMap.computeIfAbsent(company.getId(), id -> "PENDING");
-            Set<String> features = companyFeaturesMap.computeIfAbsent(company.getId(), id -> 
-                new HashSet<>(Arrays.asList("ATTENDANCE", "LEAVES", "TASKS", "MEETINGS", "CHAT"))
-            );
+            String status = company.getStatus() != null ? company.getStatus() : "PENDING";
+            Set<String> features = company.getAllowedFeaturesAsSet();
 
             String hrName = "System";
             String hrEmail = "admin@system.com";
@@ -58,8 +47,8 @@ public class SuperAdminController {
                 }
             }
 
-            String createdDateStr = company.getCreatedDate() != null ? 
-                    company.getCreatedDate().toString().replace("T", " ").substring(0, 16) : 
+            String createdDateStr = company.getCreatedDate() != null ?
+                    company.getCreatedDate().toString().replace("T", " ").substring(0, 16) :
                     "2026-07-01 00:00";
 
             SuperAdminCompanyDto dto = SuperAdminCompanyDto.builder()
@@ -85,7 +74,10 @@ public class SuperAdminController {
             @PathVariable("id") String companyId,
             @RequestParam("status") String status
     ) {
-        companyStatusMap.put(companyId, status.toUpperCase());
+        companyRepository.findById(companyId).ifPresent(company -> {
+            company.setStatus(status.toUpperCase());
+            companyRepository.save(company);
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -94,7 +86,10 @@ public class SuperAdminController {
             @PathVariable("id") String companyId,
             @RequestBody Set<String> features
     ) {
-        companyFeaturesMap.put(companyId, features);
+        companyRepository.findById(companyId).ifPresent(company -> {
+            company.setAllowedFeaturesFromSet(features);
+            companyRepository.save(company);
+        });
         return ResponseEntity.ok().build();
     }
 
@@ -138,7 +133,7 @@ public class SuperAdminController {
                 record.put("checkOut", attendance.getCheckOut() != null ? attendance.getCheckOut().toString() : null);
                 record.put("latitude", attendance.getLatitude());
                 record.put("longitude", attendance.getLongitude());
-                
+
                 if (attendance.getCheckOut() != null) {
                     record.put("status", "Checked Out");
                 } else if (attendance.getCheckIn() != null) {
@@ -176,7 +171,7 @@ public class SuperAdminController {
         java.time.Instant end = lastDay.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().minusNanos(1);
 
         List<Attendance> attendances = attendanceRepository.findByEmployee(userId);
-        
+
         List<Map<String, Object>> responseList = new ArrayList<>();
         for (Attendance attendance : attendances) {
             java.time.Instant checkIn = attendance.getCheckIn();
