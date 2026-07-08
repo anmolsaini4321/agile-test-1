@@ -226,14 +226,19 @@ fun MessageInputBox(
         TextField(
             value = messageText,
             onValueChange = onMessageChange,
-            placeholder = { Text("Type a message...") },
+            placeholder = { Text("Type a message...", color = Color.Gray) },
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 16.dp),
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.Transparent,
+            colors = TextFieldDefaults.colors(
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent
+                disabledIndicatorColor = Color.Transparent
             ),
             singleLine = true
         )

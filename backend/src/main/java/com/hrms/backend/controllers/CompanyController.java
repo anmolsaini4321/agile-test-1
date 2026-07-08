@@ -83,4 +83,12 @@ public class CompanyController {
         List<UserInfo> everyBodyOfCompany = companyServiceInterface.getEveryBodyOfCompany(userId);
         return new ResponseEntity<>(everyBodyOfCompany,HttpStatus.OK);
     }
+
+    @GetMapping("/code/{companyCode}/employees")
+    public ResponseEntity<List<UserInfo>> getEmployeesByCompanyCode(
+            @PathVariable String companyCode
+    ) {
+        List<UserInfo> employees = companyServiceInterface.getEmployeesByCompanyCode(companyCode);
+        return new ResponseEntity<>(employees, HttpStatus.OK);
+    }
 }

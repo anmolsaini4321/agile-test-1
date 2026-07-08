@@ -1,9 +1,7 @@
 package com.hrms.backend.models;
 
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,24 +11,32 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Document(collection = "companies")
+@Entity
+@Table(name = "companies")
 public class Company {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Column(unique = true, nullable = false)
     private String companyCode;
 
-    @Field(write = Field.Write.ALWAYS)
     private String companyName;
 
-    private String createdDate;
+    @Column(name = "created_date")
+    private java.time.LocalDateTime createdDate;
 
+    @Column(name = "hr_id")
     private String hr;
 
-    @Field(write = Field.Write.ALWAYS)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "company_employees", joinColumns = @JoinColumn(name = "company_id"))
+    @Column(name = "employee_id")
     private Set<String> employees = new HashSet<>();
 
-    @Field(write = Field.Write.ALWAYS)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "company_waitlist", joinColumns = @JoinColumn(name = "company_id"))
+    @Column(name = "employee_id")
     private Set<String> waitListEmployees = new HashSet<>(); // employee that HR does not still confirm
 }

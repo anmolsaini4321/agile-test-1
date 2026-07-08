@@ -34,4 +34,28 @@ public class UserResponseDto {
 
     private String imageUrl;
 
+    private String aadhar;
+    private String maritalStatus;
+    private String bloodGroup;
+    private String physicallyChallenged;
+    private String currentAddress;
+    private String permanentAddress;
+    private String fathersName;
+    private String mothersName;
+    private String emergencyName;
+    private String emergencyNumber;
+    private String emergencyRelation;
+    private String bankName;
+    private String accountHolder;
+    private String accountNumber;
+    private String ifscCode;
+    private String upiId;
+    private String uan;
+    private String pan;
+    private String pfNumber;
+    private String pfJoining;
+    private String esiNumber;
+    private String esiJoining;
+    private String epsNumber;
+    private String epsExit;
 }

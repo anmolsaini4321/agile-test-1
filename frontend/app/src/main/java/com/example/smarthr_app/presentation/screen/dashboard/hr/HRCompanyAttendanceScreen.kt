@@ -414,28 +414,39 @@ private fun getCurrentDate(): String {
     return today.format(formatter)
 }
 
-private fun formatTime(timeString: String): String {
+private fun parseUtcToLocal(timeString: String): java.time.LocalDateTime? {
     return try {
-        // Handle ISO datetime format from backend
-        val dateTime = java.time.LocalDateTime.parse(timeString.replace("Z", ""))
-        val time = dateTime.toLocalTime()
-        time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-    } catch (e: Exception) {
-        // Fallback for different time formats
-        try {
-            val time = java.time.LocalTime.parse(timeString)
-            time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-        } catch (e2: Exception) {
+        val formattedString = if (!timeString.endsWith("Z") && !timeString.contains("+") && timeString.length > 10) {
+            timeString + "Z"
+        } else {
             timeString
         }
+        val instant = java.time.Instant.parse(formattedString)
+        java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun formatTime(timeString: String): String {
+    val localDateTime = parseUtcToLocal(timeString)
+    if (localDateTime != null) {
+        return localDateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+    }
+    // Fallback for different time formats
+    return try {
+        val time = java.time.LocalTime.parse(timeString)
+        time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (e2: Exception) {
+        timeString
     }
 }
 
 private fun calculateWorkingHours(checkIn: String?, checkOut: String?): String {
     return try {
         if (checkIn != null && checkOut != null) {
-            val checkInTime = java.time.LocalDateTime.parse(checkIn.replace("Z", ""))
-            val checkOutTime = java.time.LocalDateTime.parse(checkOut.replace("Z", ""))
+            val checkInTime = parseUtcToLocal(checkIn) ?: java.time.LocalDateTime.parse(checkIn.replace("Z", ""))
+            val checkOutTime = parseUtcToLocal(checkOut) ?: java.time.LocalDateTime.parse(checkOut.replace("Z", ""))
 
             val duration = java.time.Duration.between(checkInTime, checkOutTime)
             val hours = duration.toHours()

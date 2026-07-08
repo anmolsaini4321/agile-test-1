@@ -1,6 +1,7 @@
 package com.example.smarthr_app.utils.chat
 
 import android.util.Log
+import com.example.smarthr_app.data.remote.RetrofitInstance
 import com.example.smarthr_app.data.model.ChatMessage
 import com.example.smarthr_app.data.model.SeenMessage
 import com.google.gson.Gson
@@ -23,7 +24,9 @@ class ChatWebSocketClient(
         .build()
 
     private var webSocket: WebSocket? = null
-    private val url = "wss://smarthr-backend-jx0v.onrender.com/chat-websocket/websocket"
+    private val url = RetrofitInstance.BASE_URL
+        .replace("http://", "ws://")
+        .replace("https://", "wss://") + "chat-websocket/websocket"
     private var isConnected = false
 
 

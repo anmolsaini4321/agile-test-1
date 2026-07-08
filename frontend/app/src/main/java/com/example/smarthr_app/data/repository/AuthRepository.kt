@@ -52,21 +52,7 @@ class AuthRepository(private val dataStoreManager: DataStoreManager) {
             val response = RetrofitInstance.api.login(request)
             if (response.isSuccessful) {
                 response.body()?.let { authResponse ->
-                    val user = User(
-                        userId = authResponse.user.userId,
-                        name = authResponse.user.name,
-                        email = authResponse.user.email,
-                        phone = authResponse.user.phone,
-                        role = if (authResponse.user.role == "ROLE_HR") UserRole.ROLE_HR else UserRole.ROLE_USER,
-                        companyCode = authResponse.user.companyCode,
-                        imageUrl = authResponse.user.imageUrl,
-                        gender = authResponse.user.gender,
-                        position = authResponse.user.position,
-                        department = authResponse.user.department,
-                        waitingCompanyCode = authResponse.user.waitingCompanyCode,
-                        joiningStatus = authResponse.user.joiningStatus
-                    )
-                    dataStoreManager.saveUser(user)
+                    updateLocalUser(authResponse.user)
                     dataStoreManager.saveToken(authResponse.token)
                     Resource.Success(authResponse)
                 } ?: Resource.Error("Login successful but no data received")
@@ -84,21 +70,7 @@ class AuthRepository(private val dataStoreManager: DataStoreManager) {
             val response = RetrofitInstance.api.loginWithGoogle(request)
             if (response.isSuccessful) {
                 response.body()?.let { authResponse ->
-                    val user = User(
-                        userId = authResponse.user.userId,
-                        name = authResponse.user.name,
-                        email = authResponse.user.email,
-                        phone = authResponse.user.phone,
-                        role = if (authResponse.user.role == "ROLE_HR") UserRole.ROLE_HR else UserRole.ROLE_USER,
-                        companyCode = authResponse.user.companyCode,
-                        imageUrl = authResponse.user.imageUrl,
-                        gender = authResponse.user.gender,
-                        position = authResponse.user.position,
-                        department = authResponse.user.department,
-                        waitingCompanyCode = authResponse.user.waitingCompanyCode,
-                        joiningStatus = authResponse.user.joiningStatus
-                    )
-                    dataStoreManager.saveUser(user)
+                    updateLocalUser(authResponse.user)
                     dataStoreManager.saveToken(authResponse.token)
                     Resource.Success(authResponse)
                 } ?: Resource.Error("Login successful but no data received")
@@ -121,21 +93,7 @@ class AuthRepository(private val dataStoreManager: DataStoreManager) {
             Log.d("SignUpWithGoogle", "Response: ${response.body()}")
             if (response.isSuccessful) {
                 response.body()?.let { authResponse ->
-                    val user = User(
-                        userId = authResponse.user.userId,
-                        name = authResponse.user.name,
-                        email = authResponse.user.email,
-                        phone = authResponse.user.phone,
-                        role = if (authResponse.user.role == "ROLE_HR") UserRole.ROLE_HR else UserRole.ROLE_USER,
-                        companyCode = authResponse.user.companyCode,
-                        imageUrl = authResponse.user.imageUrl,
-                        gender = authResponse.user.gender,
-                        position = authResponse.user.position,
-                        department = authResponse.user.department,
-                        waitingCompanyCode = authResponse.user.waitingCompanyCode,
-                        joiningStatus = authResponse.user.joiningStatus
-                    )
-                    dataStoreManager.saveUser(user)
+                    updateLocalUser(authResponse.user)
                     dataStoreManager.saveToken(authResponse.token)
                     Resource.Success(authResponse)
                 } ?: Resource.Error("SignUp successful but no data received")
@@ -315,16 +273,68 @@ class AuthRepository(private val dataStoreManager: DataStoreManager) {
             name = userDto.name,
             email = userDto.email,
             phone = userDto.phone,
-            role = if (userDto.role == "ROLE_HR") UserRole.ROLE_HR else UserRole.ROLE_USER,
+            role = if (userDto.role == "ROLE_HR" || userDto.role == "ROLE_ADMIN") UserRole.ROLE_HR else UserRole.ROLE_USER,
             companyCode = userDto.companyCode,
             imageUrl = userDto.imageUrl,
             gender = userDto.gender,
             position = userDto.position,
             department = userDto.department,
             waitingCompanyCode = userDto.waitingCompanyCode,
-            joiningStatus = userDto.joiningStatus
+            joiningStatus = userDto.joiningStatus,
+            aadhar = userDto.aadhar,
+            maritalStatus = userDto.maritalStatus,
+            bloodGroup = userDto.bloodGroup,
+            physicallyChallenged = userDto.physicallyChallenged,
+            currentAddress = userDto.currentAddress,
+            permanentAddress = userDto.permanentAddress,
+            fathersName = userDto.fathersName,
+            mothersName = userDto.mothersName,
+            emergencyName = userDto.emergencyName,
+            emergencyNumber = userDto.emergencyNumber,
+            emergencyRelation = userDto.emergencyRelation,
+            bankName = userDto.bankName,
+            accountHolder = userDto.accountHolder,
+            accountNumber = userDto.accountNumber,
+            ifscCode = userDto.ifscCode,
+            upiId = userDto.upiId,
+            uan = userDto.uan,
+            pan = userDto.pan,
+            pfNumber = userDto.pfNumber,
+            pfJoining = userDto.pfJoining,
+            esiNumber = userDto.esiNumber,
+            esiJoining = userDto.esiJoining,
+            epsNumber = userDto.epsNumber,
+            epsExit = userDto.epsExit
         )
         dataStoreManager.saveUser(user)
+
+        val extraDetails = ExtraProfileDetails(
+            aadhar = userDto.aadhar,
+            maritalStatus = userDto.maritalStatus,
+            bloodGroup = userDto.bloodGroup,
+            physicallyChallenged = userDto.physicallyChallenged,
+            currentAddress = userDto.currentAddress,
+            permanentAddress = userDto.permanentAddress,
+            fathersName = userDto.fathersName,
+            mothersName = userDto.mothersName,
+            emergencyName = userDto.emergencyName,
+            emergencyNumber = userDto.emergencyNumber,
+            emergencyRelation = userDto.emergencyRelation,
+            bankName = userDto.bankName,
+            accountHolder = userDto.accountHolder,
+            accountNumber = userDto.accountNumber,
+            ifscCode = userDto.ifscCode,
+            upiId = userDto.upiId,
+            uan = userDto.uan,
+            pan = userDto.pan,
+            pfNumber = userDto.pfNumber,
+            pfJoining = userDto.pfJoining,
+            esiNumber = userDto.esiNumber,
+            esiJoining = userDto.esiJoining,
+            epsNumber = userDto.epsNumber,
+            epsExit = userDto.epsExit
+        )
+        dataStoreManager.saveExtraProfileDetails(extraDetails)
     }
 
     private fun parseErrorMessage(errorBody: String?, statusCode: Int, isLogin: Boolean = false): String {

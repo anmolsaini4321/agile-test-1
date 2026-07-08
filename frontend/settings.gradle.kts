@@ -22,3 +22,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "SmartHR-App"
 include(":app")
+
+

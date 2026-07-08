@@ -2,6 +2,7 @@ package com.example.smarthr_app.data.remote
 
 import com.example.smarthr_app.data.model.AttendanceRequestDto
 import com.example.smarthr_app.data.model.AttendanceResponseDto
+import com.example.smarthr_app.data.model.LocationTrailRequest
 import com.example.smarthr_app.data.model.AuthResponse
 import com.example.smarthr_app.data.model.Chat
 import com.example.smarthr_app.data.model.ChatMessage
@@ -246,6 +247,12 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: AttendanceRequestDto
     ): Response<AttendanceResponseDto>
+
+    @POST("attendances/trail")
+    suspend fun recordLocationTrail(
+        @Header("Authorization") token: String,
+        @Body request: LocationTrailRequest
+    ): Response<Unit>
 
     @GET("attendances/history")
     suspend fun getEmployeeAttendanceHistory(

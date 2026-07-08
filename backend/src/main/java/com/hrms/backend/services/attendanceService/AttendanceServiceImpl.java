@@ -13,12 +13,15 @@ import com.hrms.backend.repositories.CompanyRepository;
 import com.hrms.backend.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -36,6 +39,12 @@ public class AttendanceServiceImpl implements AttendanceServiceInterface{
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private com.hrms.backend.repositories.EmployeeLocationTrailRepository employeeLocationTrailRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
 
     //By employee
@@ -165,6 +174,48 @@ public class AttendanceServiceImpl implements AttendanceServiceInterface{
         if (i1 == null) return i2;
         if (i2 == null) return i1;
         return i1.isAfter(i2) ? i1 : i2;
+    }
+
+    @Override
+    public void recordLocationTrail(String userId, String attendanceId, Double latitude, Double longitude) {
+        Attendance attendance = attendanceRepository.findById(attendanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendance record not found!"));
+        
+        if (!attendance.getEmployee().equals(userId)) {
+            throw new BadApiRequestException("Unauthorized location update!");
+        }
+
+        Instant now = Instant.now();
+        com.hrms.backend.models.EmployeeLocationTrail trailPoint = com.hrms.backend.models.EmployeeLocationTrail.builder()
+                .employeeId(userId)
+                .attendanceId(attendanceId)
+                .latitude(latitude)
+                .longitude(longitude)
+                .recordedAt(now)
+                .build();
+
+        employeeLocationTrailRepository.save(trailPoint);
+
+        // Broadcast new location point to super admin via WebSocket STOMP
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("employeeId", userId);
+        payload.put("attendanceId", attendanceId);
+        payload.put("latitude", latitude);
+        payload.put("longitude", longitude);
+        payload.put("recordedAt", now.toString());
+        messagingTemplate.convertAndSend("/topic/location/" + userId, payload);
+    }
+
+    @Override
+    public List<com.hrms.backend.models.EmployeeLocationTrail> getLocationTrailByEmployeeAndDate(String employeeId, LocalDate date) {
+        Instant startOfDay = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant endOfDay = date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().minusNanos(1);
+
+        Optional<Attendance> attendance = attendanceRepository.findByEmployeeAndCheckInBetween(employeeId, startOfDay, endOfDay);
+        if (attendance.isPresent()) {
+            return employeeLocationTrailRepository.findByAttendanceIdOrderByRecordedAtAsc(attendance.get().getId());
+        }
+        return java.util.Collections.emptyList();
     }
 }
 

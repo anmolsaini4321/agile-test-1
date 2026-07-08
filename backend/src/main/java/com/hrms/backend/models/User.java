@@ -3,10 +3,8 @@ package com.hrms.backend.models;
 import com.hrms.backend.models.enums.Department;
 import com.hrms.backend.models.enums.Position;
 import com.hrms.backend.models.enums.Role;
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,45 +18,67 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 
-@Document(collection  = "users")
+@Entity
+@Table(name = "users")
 public class User implements UserDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String name;
 
     private String email;
 
-    @Field(write = Field.Write.ALWAYS)
     private String phone;
 
-    @Field(write = Field.Write.ALWAYS)
     private String password;
 
     private Boolean isGoogleUser = false;
 
-    @Field(write = Field.Write.ALWAYS)
     private String gender;
 
-    private String createdAt;
+    private java.time.LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Field(write = Field.Write.ALWAYS)
     private String waitingCompanyCode;
 
-    @Field(write = Field.Write.ALWAYS)
     private String companyCode;
 
-    @Field(write = Field.Write.ALWAYS)
     private String imageUrl;
 
-    @Field(write = Field.Write.ALWAYS)
+    @Enumerated(EnumType.STRING)
     private Position position;
 
-    @Field(write = Field.Write.ALWAYS)
+    @Enumerated(EnumType.STRING)
     private Department department;
+
+    private String aadhar;
+    private String maritalStatus;
+    private String bloodGroup;
+    private String physicallyChallenged;
+    private String currentAddress;
+    private String permanentAddress;
+    private String fathersName;
+    private String mothersName;
+    private String emergencyName;
+    private String emergencyNumber;
+    private String emergencyRelation;
+    private String bankName;
+    private String accountHolder;
+    private String accountNumber;
+    private String ifscCode;
+    private String upiId;
+    private String uan;
+    private String pan;
+    private String pfNumber;
+    private String pfJoining;
+    private String esiNumber;
+    private String esiJoining;
+    private String epsNumber;
+    private String epsExit;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -135,5 +135,20 @@ public class CompanyServiceImpl implements CompanyServiceInterface {
                         .imageUrl(user1.getImageUrl())
                         .build()
         ).toList();
+     }
+
+    @Override
+    public List<UserInfo> getEmployeesByCompanyCode(String companyCode) {
+        companyRepository.findByCompanyCode(companyCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Company does not exist!!"));
+        List<User> allUsers = userRepository.findAllByCompanyCode(companyCode);
+        return allUsers.stream().map(user ->
+                UserInfo.builder()
+                        .id(user.getId())
+                        .name(user.getName())
+                        .email(user.getEmail())
+                        .imageUrl(user.getImageUrl())
+                        .build()
+        ).toList();
     }
 }

@@ -12,7 +12,7 @@ import java.util.UUID;
 @Service
 public class SuperbaseImageStorageServiceImpl implements SuperbaseImageStorageServiceInterface {
 
-    private static final String SUPABASE_URL = "https://mmawsfmqsxzjolszazph.supabase.co";
+    private static final String SUPABASE_URL = "https://ybrxwadhjipdkhjodath.supabase.co";
     private static final String ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tYXdzZm1xc3h6am9sc3phenBoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3ODg0MDYsImV4cCI6MjA2NzM2NDQwNn0.MEf8nKmj6qL5AymrUvhBCu_ll2_sk9dO_19CL_AOeW0";
 
     //all extension image allowed

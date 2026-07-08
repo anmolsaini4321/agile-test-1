@@ -1,6 +1,8 @@
 package com.example.smarthr_app.presentation.screen.dashboard.employee
 
 import android.Manifest
+import android.content.Intent
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -64,6 +66,10 @@ fun EmployeeAttendanceScreen(
     val isWaitlisted = !user?.waitingCompanyCode.isNullOrBlank()
 
     var isLocationPermissionGranted by remember { mutableStateOf(false) }
+    var isCameraPermissionGranted by remember { mutableStateOf(false) }
+    var showFaceVerificationDialog by remember { mutableStateOf(false) }
+    var verifiedCoordinates by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var isLoadingLocation by remember { mutableStateOf(false) }
 
     var odPurpose by remember { mutableStateOf("") }
     var odAssignedBy by remember { mutableStateOf("") }
@@ -135,20 +141,22 @@ fun EmployeeAttendanceScreen(
         }
     }
 
-    // Location permission launcher
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
+    // Combined permission launcher (Location + Camera)
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         isLocationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        isCameraPermissionGranted = permissions[Manifest.permission.CAMERA] == true
     }
 
     LaunchedEffect(Unit) {
-        // Request location permissions
-        locationPermissionLauncher.launch(
+        // Request location and camera permissions
+        permissionLauncher.launch(
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.CAMERA
             )
         )
 
@@ -175,6 +183,31 @@ fun EmployeeAttendanceScreen(
                 attendanceViewModel.clearMarkAttendanceState()
             }
             else -> {}
+        }
+    }
+
+    LaunchedEffect(currentAttendanceStatus) {
+        if (currentAttendanceStatus == "CHECKIN") {
+            val state = attendanceHistoryState
+            if (state is Resource.Success) {
+                val today = java.time.LocalDate.now().toString()
+                val todayRecord = state.data.find { attendance ->
+                    attendance.checkIn?.startsWith(today) == true
+                }
+                if (todayRecord != null && todayRecord.checkOut == null) {
+                    val serviceIntent = Intent(context, com.example.smarthr_app.services.LocationTrackingService::class.java).apply {
+                        putExtra("attendance_id", todayRecord.id)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent)
+                    } else {
+                        context.startService(serviceIntent)
+                    }
+                }
+            }
+        } else {
+            val serviceIntent = Intent(context, com.example.smarthr_app.services.LocationTrackingService::class.java)
+            context.stopService(serviceIntent)
         }
     }
 
@@ -422,17 +455,25 @@ fun EmployeeAttendanceScreen(
                                 ToastHelper.showErrorToast(context, "Location permission required")
                                 return@Button
                             }
+                            if (!isCameraPermissionGranted) {
+                                ToastHelper.showErrorToast(context, "Camera permission required for face attendance")
+                                return@Button
+                            }
 
                             when (val officeState = officeLocationState) {
                                 is Resource.Success -> {
                                     coroutineScope.launch {
-                                        markAttendance(
-                                            attendanceViewModel = attendanceViewModel,
+                                        isLoadingLocation = true
+                                        val coords = verifyLocationAndGetCoordinates(
                                             locationHelper = locationHelper,
                                             officeLocation = officeState.data,
-                                            currentStatus = currentAttendanceStatus,
                                             context = context
                                         )
+                                        isLoadingLocation = false
+                                        if (coords != null) {
+                                            verifiedCoordinates = coords
+                                            showFaceVerificationDialog = true
+                                        }
                                     }
                                 }
                                 is Resource.Error -> {
@@ -452,9 +493,9 @@ fun EmployeeAttendanceScreen(
                                 else -> Color(0xFF4CAF50) // Green for checkin
                             }
                         ),
-                        enabled = markAttendanceState !is Resource.Loading && currentAttendanceStatus != "CHECKOUT"
+                        enabled = markAttendanceState !is Resource.Loading && !isLoadingLocation && currentAttendanceStatus != "CHECKOUT"
                     ) {
-                        if (markAttendanceState is Resource.Loading) {
+                        if (markAttendanceState is Resource.Loading || isLoadingLocation) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 color = Color.White
@@ -894,6 +935,26 @@ fun EmployeeAttendanceScreen(
             else -> {}
         }
     }
+
+    if (showFaceVerificationDialog) {
+        FaceVerificationDialog(
+            onDismiss = { showFaceVerificationDialog = false },
+            onFaceVerified = {
+                showFaceVerificationDialog = false
+                val coords = verifiedCoordinates
+                if (coords != null) {
+                    val attendanceType = if (currentAttendanceStatus == "CHECKIN") "CHECKOUT" else "CHECKIN"
+                    attendanceViewModel.markAttendance(
+                        attendanceType,
+                        coords.first,
+                        coords.second
+                    )
+                } else {
+                    ToastHelper.showErrorToast(context, "Location coordinates missing. Try again.")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -951,17 +1012,15 @@ fun AttendanceRecordCard(record: AttendanceResponseDto) {
     }
 }
 
-private suspend fun markAttendance(
-    attendanceViewModel: AttendanceViewModel,
+private suspend fun verifyLocationAndGetCoordinates(
     locationHelper: LocationHelper,
     officeLocation: com.example.smarthr_app.data.model.OfficeLocationResponseDto,
-    currentStatus: String,
     context: android.content.Context
-) {
+): Pair<String, String>? {
     val currentLocation = locationHelper.getCurrentLocation()
     if (currentLocation == null) {
         ToastHelper.showErrorToast(context, "Unable to get current location")
-        return
+        return null
     }
 
     val currentLat = currentLocation.latitude.toString()
@@ -986,35 +1045,41 @@ private suspend fun markAttendance(
             context,
             "You are ${distance.toInt()}m away from office. Please come closer to mark attendance."
         )
-        return
+        return null
     }
 
-    val attendanceType = if (currentStatus == "CHECKIN") "CHECKOUT" else "CHECKIN"
-    attendanceViewModel.markAttendance(
-        attendanceType,
-        currentLat,
-        currentLng
-    )
+    return Pair(currentLat, currentLng)
+}
+
+private fun parseUtcToLocal(timeString: String): java.time.LocalDateTime? {
+    return try {
+        val formattedString = if (!timeString.endsWith("Z") && !timeString.contains("+") && timeString.length > 10) {
+            timeString + "Z"
+        } else {
+            timeString
+        }
+        val instant = java.time.Instant.parse(formattedString)
+        java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
+    } catch (e: Exception) {
+        null
+    }
 }
 
 private fun formatDisplayDate(dateString: String): String {
-    return try {
-        val dateTime = java.time.LocalDateTime.parse(dateString.replace("Z", ""))
-        val date = dateTime.toLocalDate()
-        "${date.dayOfMonth} ${date.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${date.year}"
-    } catch (e: Exception) {
-        dateString
+    val localDateTime = parseUtcToLocal(dateString)
+    if (localDateTime != null) {
+        val date = localDateTime.toLocalDate()
+        return "${date.dayOfMonth} ${date.month.name.lowercase().replaceFirstChar { it.uppercase() }} ${date.year}"
     }
+    return dateString
 }
 
 private fun formatTime(timeString: String): String {
-    return try {
-        val dateTime = java.time.LocalDateTime.parse(timeString.replace("Z", ""))
-        val time = dateTime.toLocalTime()
-        time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-    } catch (e: Exception) {
-        timeString
+    val localDateTime = parseUtcToLocal(timeString)
+    if (localDateTime != null) {
+        return localDateTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
     }
+    return timeString
 }
 
 @Composable

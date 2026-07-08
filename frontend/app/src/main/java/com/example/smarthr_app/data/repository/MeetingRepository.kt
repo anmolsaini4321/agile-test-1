@@ -11,6 +11,23 @@ import kotlinx.coroutines.flow.first
 
 class MeetingRepository(private val dataStoreManager: DataStoreManager) {
 
+    private fun parseErrorMessage(errorBody: String?, defaultMsg: String): String {
+        return try {
+            if (errorBody != null) {
+                val jsonObject = org.json.JSONObject(errorBody)
+                when {
+                    jsonObject.has("message") -> jsonObject.getString("message")
+                    jsonObject.has("error") -> jsonObject.getString("error")
+                    else -> defaultMsg
+                }
+            } else {
+                defaultMsg
+            }
+        } catch (e: Exception) {
+            defaultMsg
+        }
+    }
+
     suspend fun createMeeting(
         title: String,
         description: String,
@@ -36,7 +53,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("Meeting created but no data received")
                 } else {
-                    Resource.Error("Failed to create meeting: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to create meeting: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")
@@ -56,7 +74,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("No meetings data received")
                 } else {
-                    Resource.Error("Failed to load meetings: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to load meetings: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")
@@ -76,7 +95,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("No meeting data received")
                 } else {
-                    Resource.Error("Failed to load meeting: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to load meeting: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")
@@ -112,7 +132,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("Meeting updated but no data received")
                 } else {
-                    Resource.Error("Failed to update meeting: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to update meeting: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")
@@ -132,7 +153,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("Meeting cancelled but no confirmation received")
                 } else {
-                    Resource.Error("Failed to cancel meeting: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to cancel meeting: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")
@@ -152,7 +174,8 @@ class MeetingRepository(private val dataStoreManager: DataStoreManager) {
                         Resource.Success(it)
                     } ?: Resource.Error("Response sent but no confirmation received")
                 } else {
-                    Resource.Error("Failed to respond to meeting: ${response.message()}")
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string(), "Failed to respond to meeting: ${response.message()}")
+                    Resource.Error(errorMsg)
                 }
             } else {
                 Resource.Error("No authentication token found")

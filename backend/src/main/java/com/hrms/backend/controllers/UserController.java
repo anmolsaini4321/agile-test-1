@@ -41,6 +41,14 @@ public class UserController {
         return new ResponseEntity<>(userServiceInterface.getUserById(userId),HttpStatus.OK);
     }
 
+    // Super-admin: get any user's full profile by ID (public - no auth needed)
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserResponseDto> getUserProfileById(
+            @PathVariable String userId
+    ){
+        return new ResponseEntity<>(userServiceInterface.getUserById(userId), HttpStatus.OK);
+    }
+
     @PostMapping("/profile-image") //ROLE_USER,ROLE_HR
     public ResponseEntity<SuccessApiResponseMessage> updateProfileImage(
             @RequestHeader("Authorization") String authHeader,

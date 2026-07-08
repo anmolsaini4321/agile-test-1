@@ -34,4 +34,29 @@ public class UserUpdateProfileRequestDto {
             message = "Department must be one of: HR, ENGINEERING, SALES, MARKETING, FINANCE, OPERATIONS, ADMINISTRATION, SUPPORT, OTHERS"
     )
     private String department;
+
+    private String aadhar;
+    private String maritalStatus;
+    private String bloodGroup;
+    private String physicallyChallenged;
+    private String currentAddress;
+    private String permanentAddress;
+    private String fathersName;
+    private String mothersName;
+    private String emergencyName;
+    private String emergencyNumber;
+    private String emergencyRelation;
+    private String bankName;
+    private String accountHolder;
+    private String accountNumber;
+    private String ifscCode;
+    private String upiId;
+    private String uan;
+    private String pan;
+    private String pfNumber;
+    private String pfJoining;
+    private String esiNumber;
+    private String esiJoining;
+    private String epsNumber;
+    private String epsExit;
 }

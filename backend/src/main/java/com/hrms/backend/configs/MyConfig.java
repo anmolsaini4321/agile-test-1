@@ -2,6 +2,7 @@ package com.hrms.backend.configs;
 
 import com.hrms.backend.dtos.entityDtos.Meeting.MeetingResponseInfo;
 import com.hrms.backend.dtos.entityDtos.User.UserInfo;
+import com.hrms.backend.dtos.entityDtos.User.request.UserUpdateProfileRequestDto;
 import com.hrms.backend.exceptions.ResourceNotFoundException;
 import com.hrms.backend.models.MeetingResponse;
 import com.hrms.backend.models.User;
@@ -34,8 +35,15 @@ public class MyConfig {
     public ModelMapper mapper() {
         ModelMapper modelMapper = new ModelMapper();
 
+        // Use STRICT matching strategy to avoid accidental mappings (like upiId to id)
+        modelMapper.getConfiguration().setMatchingStrategy(org.modelmapper.convention.MatchingStrategies.STRICT);
+
         // Skip only nulls, but allow blank strings (like "")
         modelMapper.getConfiguration().setPropertyCondition(Conditions.isNotNull());
+
+        // Explicitly skip setting user id on profile update mapping to prevent Hibernate identifier alteration errors
+        modelMapper.typeMap(UserUpdateProfileRequestDto.class, User.class)
+            .addMappings(m -> m.skip(User::setId));
 
         // String to LocalDate
         modelMapper.addConverter(new AbstractConverter<String, LocalDate>() {

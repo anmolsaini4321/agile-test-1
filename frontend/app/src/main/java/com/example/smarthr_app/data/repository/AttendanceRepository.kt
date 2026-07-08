@@ -155,4 +155,27 @@ class AttendanceRepository(private val dataStoreManager: DataStoreManager) {
     fun getTodayDateString(): String {
         return LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
+
+    suspend fun recordLocationTrail(
+        attendanceId: String,
+        latitude: Double,
+        longitude: Double
+    ): Resource<Unit> {
+        return try {
+            val token = dataStoreManager.token.first()
+            if (token != null) {
+                val request = com.example.smarthr_app.data.model.LocationTrailRequest(attendanceId, latitude, longitude)
+                val response = RetrofitInstance.api.recordLocationTrail("Bearer $token", request)
+                if (response.isSuccessful) {
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error("Failed to record location trail: ${response.message()}")
+                }
+            } else {
+                Resource.Error("No authentication token found")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Network error: ${e.message}")
+        }
+    }
 }

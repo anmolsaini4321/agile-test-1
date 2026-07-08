@@ -447,12 +447,25 @@ fun HROfficeLocationScreen(
     }
 }
 
-private fun formatDisplayDate(dateString: String): String {
+private fun parseUtcToLocal(timeString: String): java.time.LocalDateTime? {
     return try {
-        val dateTime = java.time.LocalDateTime.parse(dateString.replace("Z", ""))
-        val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm")
-        dateTime.format(formatter)
+        val formattedString = if (!timeString.endsWith("Z") && !timeString.contains("+") && timeString.length > 10) {
+            timeString + "Z"
+        } else {
+            timeString
+        }
+        val instant = java.time.Instant.parse(formattedString)
+        java.time.LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
     } catch (e: Exception) {
-        dateString
+        null
     }
+}
+
+private fun formatDisplayDate(dateString: String): String {
+    val localDateTime = parseUtcToLocal(dateString)
+    if (localDateTime != null) {
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm")
+        return localDateTime.format(formatter)
+    }
+    return dateString
 }

@@ -20,4 +20,5 @@ public interface CompanyServiceInterface {
 
     List<UserInfo> getEveryBodyOfCompany(String userId); //get every employee as well as hr of company // chatting
 
+    List<UserInfo> getEmployeesByCompanyCode(String companyCode);
 }

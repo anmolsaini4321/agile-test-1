@@ -38,3 +38,9 @@ data class AttendanceResponseDto(
 enum class AttendanceType {
     CHECKIN, CHECKOUT
 }
+
+data class LocationTrailRequest(
+    val attendanceId: String,
+    val latitude: Double,
+    val longitude: Double
+)

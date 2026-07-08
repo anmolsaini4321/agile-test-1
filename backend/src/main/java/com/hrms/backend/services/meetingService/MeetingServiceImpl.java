@@ -46,10 +46,7 @@ public class MeetingServiceImpl implements MeetingServiceInterface {
         LocalDateTime startTime = LocalDateTime.parse(dto.getStartTime());
         LocalDateTime endTime   = LocalDateTime.parse(dto.getEndTime());
 
-        // Checking if meeting is in the past
-        if (startTime.isBefore(LocalDateTime.now())) {
-            throw new BadApiRequestException("Cannot schedule a meeting in the past");
-        }
+
 
         // validating endTime > startTime
         if (!endTime.isAfter(startTime)) {

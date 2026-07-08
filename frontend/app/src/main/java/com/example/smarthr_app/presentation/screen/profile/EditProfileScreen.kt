@@ -199,7 +199,31 @@ fun EditProfileScreen(
             phone = formattedPhone,
             gender = selectedGender?.name,
             position = selectedPosition?.name,
-            department = selectedDepartment?.name
+            department = selectedDepartment?.name,
+            aadhar = aadhar.trim(),
+            maritalStatus = maritalStatus.trim(),
+            bloodGroup = bloodGroup.trim(),
+            physicallyChallenged = physicallyChallenged.trim(),
+            currentAddress = currentAddress.trim(),
+            permanentAddress = permanentAddress.trim(),
+            fathersName = fathersName.trim(),
+            mothersName = mothersName.trim(),
+            emergencyName = emergencyName.trim(),
+            emergencyNumber = emergencyNumber.trim(),
+            emergencyRelation = emergencyRelation.trim(),
+            bankName = bankName.trim(),
+            accountHolder = accountHolder.trim(),
+            accountNumber = accountNumber.trim(),
+            ifscCode = ifscCode.trim(),
+            upiId = upiId.trim(),
+            uan = uan.trim(),
+            pan = pan.trim(),
+            pfNumber = pfNumber.trim(),
+            pfJoining = pfJoining.trim(),
+            esiNumber = esiNumber.trim(),
+            esiJoining = esiJoining.trim(),
+            epsNumber = epsNumber.trim(),
+            epsExit = epsExit.trim()
         )
 
         // Save local extra details

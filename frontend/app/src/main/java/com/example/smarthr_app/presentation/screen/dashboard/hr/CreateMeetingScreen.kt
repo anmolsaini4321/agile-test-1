@@ -650,7 +650,14 @@ fun CreateMeetingScreen(
                 showStartTimePicker = false
             },
             onDismiss = { showStartTimePicker = false },
-            initialTime = startTime.ifBlank { "09:00" }
+            initialTime = startTime.ifBlank {
+                try {
+                    val nextHour = java.time.LocalTime.now().plusHours(1)
+                    String.format("%02d:00", nextHour.hour)
+                } catch (e: Exception) {
+                    "09:00"
+                }
+            }
         )
     }
 
@@ -676,7 +683,14 @@ fun CreateMeetingScreen(
                 showEndTimePicker = false
             },
             onDismiss = { showEndTimePicker = false },
-            initialTime = endTime.ifBlank { "10:00" }
+            initialTime = endTime.ifBlank {
+                try {
+                    val nextHour = java.time.LocalTime.now().plusHours(2)
+                    String.format("%02d:00", nextHour.hour)
+                } catch (e: Exception) {
+                    "10:00"
+                }
+            }
         )
     }
 }
