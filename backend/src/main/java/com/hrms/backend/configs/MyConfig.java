@@ -98,7 +98,12 @@ public class MyConfig {
             User user = userRepository.findById(source.getParticipant())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getEmail(), user.getImageUrl());
+            UserInfo userInfo = UserInfo.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .imageUrl(user.getImageUrl())
+                    .build();
             return new MeetingResponseInfo(userInfo, source.getStatus());
         };
         // Register the converter
